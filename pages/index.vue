@@ -14,7 +14,7 @@
                 <div class="card-bottom">
                   <span>{{o.title}}</span>
                   <div>
-                    <span class="time">{{ o.updateTime}}</span>
+                    <span class="time">{{ o.createTime}}</span>
                     <el-button type="text" class="read-detail">阅读详情</el-button>
                   </div>
                 </div>
