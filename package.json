@@ -1,0 +1,32 @@
+{
+  "name": "se7en",
+  "version": "1.0.0",
+  "description": "一个基于nuxt搭建的服务端渲染网站",
+  "keywords": "nuxt,vue,个人博客,服务端渲染,Se7en",
+  "author": "se7en",
+  "private": true,
+  "config": {
+    "nuxt": {
+      "host": "0.0.0.0",
+      "post": "80"
+    }
+  },
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development nodemon server/index.js --watch server",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "cross-env": "^5.2.0",
+    "element-ui": "^2.4.6",
+    "koa": "^2.5.2",
+    "less": "^3.8.1",
+    "less-loader": "^4.1.0",
+    "nuxt": "^2.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0"
+  }
+}
