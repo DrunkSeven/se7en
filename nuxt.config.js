@@ -11,7 +11,7 @@ module.exports = {
       { charset: 'utf-8' },
       { name: 'google-site-verification', content: 'aGSG1y4cAYqh-gplWQbGayscj9uaaBHtlEMsdEIYRAY' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { hid: 'Keywords', name: 'Keywords', content: pkg.keywords },
+      { hid: 'keywords', name: 'keywords', content: pkg.keywords },
       { hid: 'description', name: 'description', content: pkg.description }
     ],
     script: [{ src: "http://res2.wx.qq.com/open/js/jweixin-1.4.0.js" }],
