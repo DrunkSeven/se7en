@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="se7en">
     <header class="header">
       <h1 class="head-title">{{title}}</h1>
       <div class="content" :class="{'top-menu-fixed':topFixed}" ref="topMenu">
@@ -25,6 +25,7 @@ import util from "~/plugins/common";
 import http from "~/plugins/axios";
 import breadcrumb from "~/components/breadcrumb";
 import topMenu from "~/components/topMenu";
+import Vue from 'vue'
 export default {
   components: {
     breadcrumb,
@@ -80,10 +81,8 @@ export default {
       }
     }
   },
-  watch: {
-    // $route: function() {
-    //   console.log(this.$store.state.activeIndex);
-    // }
+  mounted() {
+
   },
   methods: {
     scrollEvent() {

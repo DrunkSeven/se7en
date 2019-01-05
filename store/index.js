@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import http from "~/plugins/axios";
-import util from "~/plugins/common";
 Vue.use(Vuex)
 
 const store = () => new Vuex.Store({
