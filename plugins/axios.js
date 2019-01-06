@@ -9,7 +9,7 @@ let http = axios.create({
 });
 
 // 默认超时是10秒
-http.defaults.timeout = 100000;
+http.defaults.timeout = 10000;
 
 // 定义一个拦截器，查看请求的情况
 http.interceptors.request.use(async (config) => {
@@ -38,9 +38,14 @@ http.interceptors.response.use(async (response) => {
   return response.data;
 }, function (error) {
   // 对响应错误做点什么
-  if (process.browser && error.response.status == 403) {
+  if (process.browser && error.response && error.response.status == 403) {
     Message({
       message: error.response.data.msg,
+      type: "error"
+    });
+  } else if (process.browser) {
+    Message({
+      message: '服务器炸了',
       type: "error"
     });
   }
