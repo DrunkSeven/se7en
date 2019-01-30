@@ -13,6 +13,7 @@
       <breadcrumb></breadcrumb>
       <nuxt/>
     </div>
+    <canvas class="bg-canvas" id="bgCanvas"></canvas>
     <footer class="footer">
       <div class="content">
         <p>by 幻化成扇子 © 2018</p>
@@ -25,7 +26,7 @@ import util from "~/plugins/common";
 import http from "~/plugins/axios";
 import breadcrumb from "~/components/breadcrumb";
 import topMenu from "~/components/topMenu";
-import Vue from 'vue'
+import Vue from "vue";
 export default {
   components: {
     breadcrumb,
@@ -82,9 +83,12 @@ export default {
     }
   },
   mounted() {
-
+    this.draw();
   },
   methods: {
+    draw() {
+      let context = document.getElementById("bgCanvas").getContext("2d");
+    },
     scrollEvent() {
       var offsetTop = 85;
       var scrollTop =
@@ -95,19 +99,19 @@ export default {
     },
     showConsole() {
       const text = `
-               .5qYr        Z27 ..              
-               SvQ  BBv:. Bv:  PYB              
-               B.                  B.             
-              LB.                  Br             
-             75                    .B:            
-             B     ————      ————   :B                 
-            B.                       :B           
-            B                         g           
-           .E                         Q.          
-            B.    别看了，你学不会的    B           
-            rB                       BM           
-             XB                     BB            
-              iBRY:             .iPQ7             
+               .5qYr        Z27 ..
+               SvQ  BBv:. Bv:  PYB
+               B.                  B.
+              LB.                  Br
+             75                    .B:
+             B     ————      ————   :B
+            B.                       :B
+            B                         g
+           .E                         Q.
+            B.    别看了，你学不会的    B
+            rB                       BM
+             XB                     BB
+              iBRY:             .iPQ7
                 iSgBBLdQP7ri.vgXP7:`;
       console.log("%c%s", "color:#409eff;font-size:18px", text);
     }
@@ -116,6 +120,9 @@ export default {
 </script>
 <style lang="less">
 @default-color: #409eff;
+#se7en {
+  background: #000;
+}
 body {
   margin: 0;
   font-family: "Microsoft YaHei";
@@ -174,6 +181,7 @@ body {
   height: 56px;
 }
 .center-box {
+  background: #fff;
   padding: 2vh 0;
   box-sizing: border-box;
   min-height: calc(100vh - 220px);
@@ -181,10 +189,15 @@ body {
 .content {
   max-width: 1100px;
   margin: auto;
-  box-sizing: border-box;
   padding-left: 2vw;
   padding-right: 2vw;
-  box-sizing: border-box;
+}
+.bg-canvas {
+  width: 100vw;
+  height: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 a {
   text-decoration: none;

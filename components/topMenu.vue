@@ -20,7 +20,10 @@
       </el-menu-item>
       <!-- <el-menu-item index="3">
         <nuxt-link to="/ticket">票票</nuxt-link>
-      </el-menu-item> -->
+      </el-menu-item>-->
+      <!-- <el-menu-item index="3">
+        <nuxt-link to="/canvas">画布</nuxt-link>
+      </el-menu-item>-->
       <el-menu-item index="2">
         <nuxt-link to="/message">留言</nuxt-link>
       </el-menu-item>
