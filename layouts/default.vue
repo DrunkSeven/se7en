@@ -1,19 +1,21 @@
 <template>
   <div id="se7en">
-    <header class="header">
+    <header class="header" :style="{'margin-top':$store.state.showHeader?'':'-70px'}">
       <h1 class="head-title">{{title}}</h1>
+      <div style="height:61px" v-show="topFixed"></div>
       <div class="content" :class="{'top-menu-fixed':topFixed}" ref="topMenu">
-        <topMenu></topMenu>
+        <topMenu/>
         <div>
           <audio :src="audioLink"></audio>
         </div>
       </div>
     </header>
+    <!-- <pullTab/> -->
     <div class="content center-box">
       <breadcrumb></breadcrumb>
       <nuxt/>
     </div>
-    <canvas class="bg-canvas" id="bgCanvas"></canvas>
+    <!-- <canvas class="bg-canvas" id="bgCanvas"></canvas> -->
     <footer class="footer">
       <div class="content">
         <p>by 幻化成扇子 © 2018</p>
@@ -26,18 +28,25 @@ import util from "~/plugins/common";
 import http from "~/plugins/axios";
 import breadcrumb from "~/components/breadcrumb";
 import topMenu from "~/components/topMenu";
+import pullTab from "~/components/pullTab";
+
 import Vue from "vue";
 export default {
   components: {
     breadcrumb,
-    topMenu
+    topMenu,
+    pullTab
   },
   // watchQuery: ["activeIndex"],
   data() {
     return {
       title: `${process.env.title}`,
       audioLink: "",
-      topFixed: false
+      topFixed: false,
+      ctx: "",
+      canvasWidth: 0,
+      canvasHeight: 0,
+      dot: []
       // breadcrumbList: this.$store.state.breadcrumbList
     };
   },
@@ -82,12 +91,51 @@ export default {
       }
     }
   },
-  mounted() {
-    this.draw();
+  watch:{
+    $route:function(){
+      this.$store.commit('showHeader',true);
+    }
   },
   methods: {
-    draw() {
-      let context = document.getElementById("bgCanvas").getContext("2d");
+    drawInit() {
+      let canvas = document.getElementById("bgCanvas");
+      canvas.width = document.body.clientWidth;
+      canvas.height = document.body.clientHeight;
+
+      this.canvasWidth = canvas.width;
+      this.canvasHeight = canvas.height;
+      this.ctx = canvas.getContext("2d");
+      for (let i = 0; i < 10; i++) {
+        let x = Math.floor(Math.random() * this.canvasWidth);
+        let y = Math.floor(Math.random() * this.canvasHeight);
+        this.dot.push(this.drawArc(this.ctx, x, y));
+        this.animate(this.dot[i]);
+      }
+      setInterval(() => {
+        this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        for (let i = 0; i < this.dot.length; i++) {
+          let dot = this.dot[i];
+          this.dot[i] = this.drawArc(
+            dot.ctx,
+            dot.x + dot.offset,
+            dot.y + dot.offset
+          );
+        }
+      }, 50);
+    },
+    drawArc(ctx, x, y) {
+      let offset = Math.floor(Math.random() * 5);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.fillStyle = "green";
+      ctx.fill();
+      ctx.restore();
+      return { ctx: ctx, offset: offset, x: x, y: y };
+    },
+    animate(ctx) {
+      console.log(ctx);
     },
     scrollEvent() {
       var offsetTop = 85;
@@ -121,7 +169,10 @@ export default {
 <style lang="less">
 @default-color: #409eff;
 #se7en {
-  background: #000;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100vh;
 }
 body {
   margin: 0;
@@ -129,8 +180,8 @@ body {
 }
 .header {
   background: @default-color;
-  padding-top: 1px;
-  height: 160px;
+  max-height: 160px;
+  transition: all 0.5s;
   .head-title {
     text-align: center;
     color: #fff;
@@ -140,6 +191,9 @@ body {
       letter-spacing: 2vw;
     }
   }
+  .content {
+    margin-bottom: 16px;
+  }
 }
 .top-menu-fixed {
   position: fixed;
@@ -147,7 +201,6 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  margin: auto;
   z-index: 11;
   .el-menu {
     background: #409eff;
@@ -181,10 +234,11 @@ body {
   height: 56px;
 }
 .center-box {
+  flex: 1;
+  width: 100%;
   background: #fff;
   padding: 2vh 0;
   box-sizing: border-box;
-  min-height: calc(100vh - 220px);
 }
 .content {
   max-width: 1100px;
@@ -193,11 +247,12 @@ body {
   padding-right: 2vw;
 }
 .bg-canvas {
-  width: 100vw;
-  height: 100vw;
+  // width: 100vw;
+  // height: 100vh;
   position: fixed;
   top: 0;
   left: 0;
+  z-index: 12;
 }
 a {
   text-decoration: none;

@@ -9,11 +9,15 @@ const store = () => new Vuex.Store({
         code: '',
         wxReady: false,
         breadcrumbList: [],
-        activeIndex: "0"
+        activeIndex: "0",
+        showHeader:true,
     },
     mutations: {
         async getVerificationCode(state) {
             state.code = await http.post("getVerificationCode", {}) || '';
+        },
+        showHeader(state,flag){
+            state.showHeader=flag;
         },
         changeActiveIndex(state, path) {
             state.activeIndex = path;
