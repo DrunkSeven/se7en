@@ -32,6 +32,12 @@ const Utils = {
             Utils.setCookie("token", token);
         }
         return token;
-    }
+    },
+    showMobileTheme() {
+        if (/(iPhone|iPad|iPod|iOS|Android)/i.test(navigator.userAgent) && (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) < 728) {
+            return true;
+        }
+        return false;
+    },
 }
 export default Utils;

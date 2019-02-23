@@ -2,7 +2,7 @@
   "name": "se7en",
   "version": "1.0.0",
   "description": "一个基于nuxt搭建的服务端渲染网站",
-  "keywords": "幻化成扇子,nuxt,vue,个人博客,服务端渲染,Se7en,个人网站",
+  "keywords": "幻化成扇子,nuxt,vue,个人博客,服务端渲染,Se7en,个人网站,前端工程师",
   "author": "se7en",
   "private": true,
   "config": {

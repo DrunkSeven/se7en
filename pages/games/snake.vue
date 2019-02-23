@@ -1,19 +1,20 @@
 <template>
   <div class="snake-page">
     <h1 class="title">贪吃蛇儿</h1>
-    <p>
+    <div>
       <el-radio-group :disabled="start" size="mini" v-model="difficulty">
         <el-radio-button label="手残"></el-radio-button>
         <el-radio-button label="正常"></el-radio-button>
-        <el-radio-button label="地狱"></el-radio-button>
+        <el-radio-button label="虐心"></el-radio-button>
       </el-radio-group>
       <el-button size="mini" type="primary" @click="startGame">{{start?`分数：${mark}`:'点我开吃'}}</el-button>
-    </p>
+      <el-button size="mini" type="primary" @click="showrankDialog">排行榜</el-button>
+    </div>
     <div class="slider-box">
       <el-slider :disabled="start" :min="10" :max="20" height="200px" v-model="rw"></el-slider>
     </div>
     <canvas ref="myCanvas" :width="rw*30" :height="rw*20"></canvas>
-    <div class="btn-box">
+    <div class="btn-box" v-if="showBtn">
       <el-button round type="primary" @click="changeKey(38)" icon="el-icon-arrow-up"></el-button>
       <div>
         <el-button round type="primary" @click="changeKey(37)" icon="el-icon-arrow-left"></el-button>
@@ -21,12 +22,23 @@
       </div>
       <el-button round type="primary" @click="changeKey(40)" icon="el-icon-arrow-down"></el-button>
     </div>
+    <el-dialog title="排行榜" :visible.sync="showrank" width="90%">
+      <el-radio-group :disabled="start" size="mini" v-model="rank" @change="showrankDialog">
+        <el-radio-button label="手残"></el-radio-button>
+        <el-radio-button label="正常"></el-radio-button>
+        <el-radio-button label="虐心"></el-radio-button>
+      </el-radio-group>
+      <el-table :data="dataList">
+        <el-table-column property="difficulty" align="center" label="难度" width="50"></el-table-column>
+        <el-table-column property="name" align="center" label="id" width="150px"></el-table-column>
+        <el-table-column property="mark" align="center" label="分数"></el-table-column>
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 <script>
-class snake {
-  head;
-}
+import util from "~/plugins/common";
+import http from "~/plugins/axios";
 export default {
   data() {
     return {
@@ -50,14 +62,57 @@ export default {
       start: false,
       canvasSize: 10,
       difficulty: "正常",
-      timeNum: 200
+      timeNum: 200,
+      showrank: false,
+      rank: "正常",
+      dataAllList: "",
+      dataList: [],
+      showBtn: false
+    };
+  },
+  computed: {
+    wxReady() {
+      return this.$store.state.wxReady;
+    }
+  },
+  watch: {
+    wxReady: function() {
+      if (process.client) {
+        this.$store.commit("setShare", {
+          title: "幻化成扇子的小窝-贪吃蛇儿",
+          imgUrl: "http://se7en.iego.net/_nuxt/img/00d2d25.jpg",
+          desc: "幻化成扇子的小窝-贪吃蛇儿"
+        });
+      }
+    }
+  },
+  head() {
+    return {
+      title: `${process.env.title}-贪吃蛇儿`,
+      meta: [
+        {
+          hid: "description",
+          name: "description",
+          content: `${process.env.title}贪吃蛇儿`
+        },
+        {
+          hid: "keyword",
+          name: "keyword",
+          content: `贪吃蛇儿,贪吃蛇游戏,se7en,,node,幻化成扇子`
+        }
+      ]
     };
   },
   async asyncData(content) {
     content.store.commit("changeActiveIndex", "3");
     content.store.commit("changeBreadcrumb", []);
+    // const game = await http.post("getSnakeMarkList");
+    // return {
+    //   dataList: game.dataList
+    // };
   },
   mounted() {
+    this.showBtn = util.showMobileTheme();
     let canvas = this.$refs.myCanvas;
     this.ctx = canvas.getContext("2d");
     canvas.width = this.rw * 30;
@@ -100,7 +155,9 @@ export default {
         this.snakeBody.unshift(rect);
       }
       document.onkeydown = e => {
-        this.changeKey(e.keyCode);
+        let key=e.keyCode
+        if (key == 37 || key == 38 || key == 39 || key == 40)
+          this.changeKey(key);
       };
       this.snakeBody.forEach(element => {
         this.drawRect(element);
@@ -195,29 +252,26 @@ export default {
         tip = `大神，请收下我的膝盖`;
       }
       this.$message(tip);
-      //   this.$alert(tip, "嘿嘿嘿", {
-      //     confirmButtonText: "确定",
-      //     showClose: false
-      //   });
-      //   this.$prompt("上榜啦，请输入你的id", tip, {
-      //     confirmButtonText: "确定",
-      //     cancelButtonText: "取消",
-      //     inputPlaceholder: "1-10个字符",
-      //     inputPattern: /^.{1,10}$/,
-      //     inputErrorMessage: "按规则输入好嘛"
-      //   })
-      //     .then(({ value }) => {
-      //       this.$message({
-      //         type: "success",
-      //         message: "你的id是: " + value
-      //       });
-      //     })
-      //     .catch(() => {
-      //       this.$message({
-      //         type: "info",
-      //         message: "取消输入"
-      //       });
-      //     });
+    },
+    showrankDialog() {
+      if (!this.dataAllList) {
+        this.dataAllList = this.getSnakeMarkList();
+      }
+      this.dataList = [];
+      this.dataAllList.then(value => {
+        value.dataList.forEach(val => {
+          if (val.difficulty == this.rank) {
+            this.dataList.push(val);
+          }
+        });
+      });
+      this.showrank = true;
+    },
+    async getSnakeMarkList() {
+      return await http({
+        url: "/getSnakeMarkList",
+        method: "post"
+      });
     },
     setSnakeBody() {
       switch (this.direction) {
@@ -256,7 +310,7 @@ export default {
     margin-bottom: 10px;
   }
   canvas {
-    border: 1px solid #000;
+    border: 2px solid #000;
     max-width: 100%;
   }
   .slider-box {
