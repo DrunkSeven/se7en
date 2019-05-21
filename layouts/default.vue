@@ -5,22 +5,21 @@
       <div style="height:61px" v-show="topFixed"></div>
       <div class="content" :class="{'top-menu-fixed':topFixed}" ref="topMenu">
         <topMenu/>
-        <div>
-          <audio :src="audioLink"></audio>
-        </div>
       </div>
     </header>
-    <!-- <pullTab/> -->
     <div class="content center-box">
       <breadcrumb></breadcrumb>
       <nuxt/>
     </div>
-    <!-- <canvas class="bg-canvas" id="bgCanvas"></canvas> -->
     <footer class="footer">
       <div class="content">
         <p>by 幻化成扇子 © 2018</p>
       </div>
     </footer>
+    <live2d
+      class="live2d"
+      :style="{'opacity':showLive2d?'1':'0','transform':'translateY(-'+num+'px)'}"
+    />
   </div>
 </template>
 <script>
@@ -28,28 +27,24 @@ import util from "~/plugins/common";
 import http from "~/plugins/axios";
 import breadcrumb from "~/components/breadcrumb";
 import topMenu from "~/components/topMenu";
-import pullTab from "~/components/pullTab";
-
+import live2d from "~/components/live2d";
 import Vue from "vue";
 export default {
   components: {
     breadcrumb,
     topMenu,
-    pullTab
+    live2d
   },
   // watchQuery: ["activeIndex"],
   data() {
     return {
       title: `${process.env.title}`,
-      audioLink: "",
       topFixed: false,
-      ctx: "",
-      canvasWidth: 0,
-      canvasHeight: 0,
-      dot: []
-      // breadcrumbList: this.$store.state.breadcrumbList
+      showLive2d: true,
+      num: 0
     };
   },
+
   created() {
     let path = this.$router.history.current.path;
     if (path.indexOf("essay") != -1) {
@@ -91,59 +86,32 @@ export default {
       }
     }
   },
-  watch:{
-    $route:function(){
-      this.$store.commit('showHeader',true);
+
+  watch: {
+    $route: function() {
+      this.$store.commit("showHeader", true);
     }
   },
-  methods: {
-    drawInit() {
-      let canvas = document.getElementById("bgCanvas");
-      canvas.width = document.body.clientWidth;
-      canvas.height = document.body.clientHeight;
 
-      this.canvasWidth = canvas.width;
-      this.canvasHeight = canvas.height;
-      this.ctx = canvas.getContext("2d");
-      for (let i = 0; i < 10; i++) {
-        let x = Math.floor(Math.random() * this.canvasWidth);
-        let y = Math.floor(Math.random() * this.canvasHeight);
-        this.dot.push(this.drawArc(this.ctx, x, y));
-        this.animate(this.dot[i]);
-      }
-      setInterval(() => {
-        this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-        for (let i = 0; i < this.dot.length; i++) {
-          let dot = this.dot[i];
-          this.dot[i] = this.drawArc(
-            dot.ctx,
-            dot.x + dot.offset,
-            dot.y + dot.offset
-          );
-        }
-      }, 50);
-    },
-    drawArc(ctx, x, y) {
-      let offset = Math.floor(Math.random() * 5);
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(x, y, 10, 0, 2 * Math.PI);
-      ctx.stroke();
-      ctx.fillStyle = "green";
-      ctx.fill();
-      ctx.restore();
-      return { ctx: ctx, offset: offset, x: x, y: y };
-    },
-    animate(ctx) {
-      console.log(ctx);
-    },
+  methods: {
     scrollEvent() {
       var offsetTop = 85;
       var scrollTop =
         window.pageYOffset ||
         document.documentElement.scrollTop ||
         document.body.scrollTop;
-      scrollTop > offsetTop ? (this.topFixed = true) : (this.topFixed = false);
+      this.topFixed = scrollTop > offsetTop;
+      let offset =
+        document.body.clientHeight -
+        scrollTop -
+        document.documentElement.clientHeight;
+
+      this.showLive2d = !(offset == 0);
+      if (offset < 55) {
+        this.num = 55 - offset;
+      } else {
+        this.num = 0;
+      }
     },
     showConsole() {
       const text = `
@@ -177,6 +145,14 @@ export default {
 body {
   margin: 0;
   font-family: "Microsoft YaHei";
+}
+.live2d {
+  transition: opacity 0.5s;
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 150px;
+  z-index: 10;
 }
 .header {
   background: @default-color;
