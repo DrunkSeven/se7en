@@ -2,12 +2,9 @@
   <section class="canvas-body" onkeydown="onkeydown($event)"></section>
 </template>
 <script>
-import model from "~/assets/model/model.json";
 export default {
   data() {
-    return {
-      model: model
-    };
+    return {};
   },
 
   mounted() {},

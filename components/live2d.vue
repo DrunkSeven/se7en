@@ -37,7 +37,6 @@ export default {
   },
   mounted() {
     loadlive2d("live2d", "/model/model.json");
-    this.text = "你好鸭,欢迎";
   },
   methods: {
     hide() {
