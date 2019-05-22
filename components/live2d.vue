@@ -1,7 +1,7 @@
 <template>
   <div class="live2d-box" v-show="show">
     <div class="message" v-show="showText" v-html="text"></div>
-    <canvas @click="hide" id="live2d" class="canvas" width="500" height="500"></canvas>
+    <canvas id="live2d" class="canvas" width="500" height="500"></canvas>
   </div>
 </template>
 <script>
@@ -9,7 +9,7 @@ export default {
   data() {
     return {
       text: "",
-      showText: true,
+      showText: false,
       clickNum: 0,
       show: true,
       timer: 0
