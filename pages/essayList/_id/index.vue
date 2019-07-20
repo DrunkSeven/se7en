@@ -33,14 +33,14 @@ export default {
     ]);
     const type = content.params.id == "all" ? undefined : content.params.id;
     const pageSize = 10;
-    const data = await http.post("getEssayList", {
+    const data = await http.get("/essay", {
       type: type,
       pageSize: pageSize,
       pageIndex: 1
     });
     return {
-      dataList: data.dataList,
-      total: data.total,
+      dataList: data.rows,
+      total: data.count,
       type: type,
       pageSize: pageSize
     };
@@ -78,7 +78,7 @@ export default {
     getDataList(pageIndex) {
       this.pageIndex = pageIndex || this.pageIndex;
       http
-        .post("getEssayList", {
+        .get("/essay", {
           keyword: this.keyword,
           type: this.keyword ? undefined : this.type,
           pageSize: this.pageSize,

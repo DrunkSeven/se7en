@@ -4,7 +4,7 @@
       <li v-for="(o,index) in dataList" :key="index">
         <nuxt-link class="essay-item" :to="`/essayDetail/${o.id}`">
           <div class="left-box">
-            <img width="60px" height="60px" :src="o.img" onerror="~/assets/img/header.jpg">
+            <img width="60px" height="60px" :src="o.img" onerror="~/assets/img/header.jpg" />
             <div class="box-center">
               <p class="title">{{o.title}}</p>
               <p class="intorduction">{{o.intorduction}}</p>
@@ -13,7 +13,7 @@
           </div>
           <div class="right-box">
             <i v-show="o.top&&total" class="iconfont icon-zhiding zhiding"></i>
-            <p class="update-time">{{o.createTime.split(' ')[0]}}</p>
+            <p class="update-time">{{util.changeTimeForm(o.createdAt).split(' ')[0]}}</p>
           </div>
         </nuxt-link>
       </li>

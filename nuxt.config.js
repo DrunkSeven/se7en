@@ -21,8 +21,10 @@ module.exports = {
   },
   env: {
     title: "幻化成扇子的小窝",
-    // baseUrl: 'http://127.0.0.1:7001/',
-    baseUrl: 'http://120.79.88.200:7001/',
+    baseUrl: 'http://127.0.0.1:7001/',
+    HOST: pkg.config.nuxt.host,
+    PORT: pkg.config.nuxt.port
+    // baseUrl: 'http://120.79.88.200:7001/',
   },
   /*
   ** Customize the progress-bar color
@@ -46,8 +48,15 @@ module.exports = {
   plugins: [
     '@/plugins/element-ui',
     '~plugins/filters.js',
+    '@/plugins/common.js',
   ],
-
+  router: {
+    base: '/',
+    middleware: ["default"],
+    scrollBehavior: function (to, from, savedPosition) {
+      return { x: 0, y: 0 }
+    }
+  },
   /*
   ** Nuxt.js modules
   */

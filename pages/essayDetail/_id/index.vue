@@ -13,7 +13,7 @@ import http from "~/plugins/axios";
 export default {
   // middleware: "response",
   async asyncData(content) {
-    const essayDetail = await http.post("getEssayDetail", {
+    const essayDetail = await http.get("/essay", {
       id: content.params.id
     });
     content.store.commit("changeActiveIndex", "1");

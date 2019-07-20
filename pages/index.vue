@@ -3,7 +3,13 @@
     <div class="center-box">
       <div class="left-box">
         <h3 style="margin-top:0">推荐阅读</h3>
-        <el-carousel indicator-position="none" arrow="always" :interval="4000" height="300px">
+        <el-carousel
+          v-if="dataList.length"
+          indicator-position="none"
+          arrow="always"
+          :interval="4000"
+          height="300px"
+        >
           <el-carousel-item v-for="(o,index) in dataList.slice(0,3)" :key="index">
             <el-card shadow="hover" :body-style="{ padding: '0px' }">
               <nuxt-link
@@ -14,7 +20,7 @@
                 <div class="card-bottom">
                   <span>{{o.title}}</span>
                   <div>
-                    <span class="time">{{ o.createTime}}</span>
+                    <span class="time">{{util.changeTimeForm(o.createdAt)}}</span>
                     <el-button type="text" class="read-detail">阅读详情</el-button>
                   </div>
                 </div>
@@ -22,11 +28,13 @@
             </el-card>
           </el-carousel-item>
         </el-carousel>
-        <h3>最近更新
+        <h3>
+          最近更新
           <nuxt-link to="/essayList/all" class="more">更多></nuxt-link>
         </h3>
         <essayList :dataList="dataList.slice(3,dataList.length)" :total="0" :currentPage="0"></essayList>
-        <h3>最新留言
+        <h3>
+          最新留言
           <nuxt-link to="/message" class="more">更多></nuxt-link>
         </h3>
         <messageList :dataList="messageList" :total="0" :currentPage="0"></messageList>
@@ -45,19 +53,20 @@
             height="50px"
             width="50px"
             class="header-img"
-          >
+          />
           <div class="auther-text">
             <p>
               微博：
               <a href="https://weibo.com/u/2326305275" target="_blank">幻化成扇子</a>
             </p>
-            <p>QQ: 345413763
-              <br>Email: 345413763@qq.com
+            <p>
+              QQ: 345413763
+              <br />Email: 345413763@qq.com
             </p>
           </div>
           <div class="wxcode-box" v-show="showWxCode">
             <p>作者微信</p>
-            <img width="150" height="150" src="~/assets/img/wx_code.png">
+            <img width="150" height="150" src="~/assets/img/wx_code.png" />
           </div>
         </div>
         <p style="text-align:center;color:#f00">~欢迎交流~</p>
@@ -80,20 +89,20 @@ export default {
     messageList,
     friendLink
   },
-  async asyncData(content) {
-    content.store.commit("changeActiveIndex", "0");
-    content.store.commit("changeBreadcrumb", []);
-    const data = await http.post("getEssayList", {
+  async asyncData({ app, store }) {
+    store.commit("changeActiveIndex", "0");
+    store.commit("changeBreadcrumb", []);
+    const data = await http.get("/essay", {
       pageSize: 8,
       pageIndex: 1
     });
-    const message = await http.post("getMessage", {
+    const message = await http.get("/message", {
       pageSize: 5,
       pageIndex: 1
     });
     return {
-      dataList: data.dataList,
-      messageList: message.dataList
+      dataList: data.rows,
+      messageList: message
     };
   },
   data() {
