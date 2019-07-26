@@ -37,7 +37,6 @@
   </div>
 </template>
 <script>
-import util from "~/plugins/common";
 import http from "~/plugins/axios";
 export default {
   data() {
@@ -112,7 +111,7 @@ export default {
     // };
   },
   mounted() {
-    this.showBtn = util.showMobileTheme();
+    this.showBtn = this.util.showMobileTheme();
     let canvas = this.$refs.myCanvas;
     this.ctx = canvas.getContext("2d");
     canvas.width = this.rw * 30;
@@ -155,7 +154,7 @@ export default {
         this.snakeBody.unshift(rect);
       }
       document.onkeydown = e => {
-        let key=e.keyCode
+        let key = e.keyCode;
         if (key == 37 || key == 38 || key == 39 || key == 40)
           this.changeKey(key);
       };

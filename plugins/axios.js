@@ -1,20 +1,14 @@
 import axios from 'axios';
 import { util } from '@/plugins/common.js';
-// import { api } from '@/plugins/api';
-const pkg = require('@/package');
 
 let http = axios.create({
-  baseURL: `http://127.0.0.1:7001`,
+  baseURL: process.env.baseUrl,
   timeout: 10 * 1000
 });
 
-let CancelToken = axios.CancelToken;
-let source = CancelToken.source();
 http.interceptors.request.use((config) => {
-
   // 强制调用时传递method用大写
   let method = config.method || 'get';
-
   if (method != 'get') {
     // 强制传递了method
   } else if (config.params) {
@@ -22,17 +16,9 @@ http.interceptors.request.use((config) => {
   } else if (config.data) {
     config.method = 'post';
   }
-  // if (process.client) {
-  //   let token = util.getToken();
-  //   //requireToken参数传入为true时说明该接口需要token,若缓存中没有token,不发送请求直接跳转到登录页,减小服务器压力,提高响应速度
-  //   if (config.requireToken && !token) {
-  //     util.toLogin();
-  //     config.cancelToken = source.token;
-  //     return
-  //   } else if (token) {
-  //     config.headers.Authorization = 'Bearer ' + token;
-  //   }
-  // }
+  if (process.client && $nuxt.$store.state.token) {
+    config.headers['token'] = $nuxt.$store.state.token
+  }
   if ((config.data || config.params) && method == 'get') {
     config.data = util.serialize(config.data || config.params);
   }
@@ -42,17 +28,10 @@ http.interceptors.request.use((config) => {
 });
 
 http.interceptors.response.use(response => {
-
   if (response.status == 200) {
-
-    //储存服务器时间
-    // if (process.client) {
-    //   $nuxt.$store.commit('setServiceTime', new Date(response.headers.date).getTime())
-    // }
     let data = response.data;
     return Promise.resolve(data);
   } else {
-
     return Promise.reject(false);
   }
 }, error => {

@@ -1,14 +1,14 @@
 <template>
   <div class="code-box">
-    <div v-html="$store.state.code.data" @click="updateCode"></div>
+    <div v-html="$store.state.code" @click="updateCode"></div>
     <input
       class="code-input"
-      maxlength="5"
+      maxlength="4"
       type="text"
       v-bind:value="codeStr"
       v-on:input="$emit('getCodeStr', $event.target.value)"
       placeholder="请输入验证码"
-    >
+    />
   </div>
 </template>
 <script>
@@ -42,7 +42,7 @@ export default {
   .code-box {
     max-width: 100%;
   }
-  .code-input{
+  .code-input {
     width: 130px;
   }
 }

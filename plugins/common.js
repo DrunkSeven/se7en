@@ -25,10 +25,26 @@ const util = {
     }
     return "";
   },
+  success(message = '网络连接失败', duration = 3000) {
+    Notification({
+      title: '提示',
+      type: "success",
+      message,
+      duration
+    });
+  },
   error(message = '网络连接失败', duration = 3000) {
     Notification({
       title: '错误提示',
       type: "error",
+      message,
+      duration
+    });
+  },
+  info(message = '网络连接失败', duration = 3000) {
+    Notification({
+      title: '提示',
+      type: "info",
       message,
       duration
     });

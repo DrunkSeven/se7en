@@ -21,7 +21,7 @@ module.exports = {
   },
   env: {
     title: "幻化成扇子的小窝",
-    baseUrl: 'http://127.0.0.1:7001/',
+    baseUrl: 'http://api.se7en.com',
     HOST: pkg.config.nuxt.host,
     PORT: pkg.config.nuxt.port
     // baseUrl: 'http://120.79.88.200:7001/',
@@ -39,7 +39,7 @@ module.exports = {
     '~/assets/iconfont/iconfont.css'
   ],
   server: {
-    port: 80, // default: 3000
+    port: 81, // default: 3000
     host: '0.0.0.0', // default: localhost
   },
   /*
@@ -49,6 +49,7 @@ module.exports = {
     '@/plugins/element-ui',
     '~plugins/filters.js',
     '@/plugins/common.js',
+    '@/plugins/api.js',
   ],
   router: {
     base: '/',

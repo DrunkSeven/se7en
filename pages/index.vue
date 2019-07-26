@@ -82,7 +82,6 @@ import http from "~/plugins/axios";
 import messageList from "../components/messageList";
 import essayList from "../components/essayList";
 import friendLink from "../components/friendLink";
-import util from "~/plugins/common";
 export default {
   components: {
     essayList,
@@ -102,7 +101,7 @@ export default {
     });
     return {
       dataList: data.rows,
-      messageList: message
+      messageList: message.rows
     };
   },
   data() {

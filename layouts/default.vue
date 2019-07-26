@@ -4,36 +4,35 @@
       <h1 class="head-title">{{title}}</h1>
       <div style="height:61px" v-show="topFixed"></div>
       <div class="content" :class="{'top-menu-fixed':topFixed}" ref="topMenu">
-        <topMenu/>
+        <topMenu />
       </div>
     </header>
     <div class="content center-box">
       <breadcrumb></breadcrumb>
-      <nuxt/>
+      <nuxt />
     </div>
     <footer class="footer">
       <div class="content">
         <p>by 幻化成扇子 © 2018</p>
       </div>
     </footer>
-    <live2d
+    <!-- <live2d
       class="live2d"
       :style="{'opacity':showLive2d?'1':'0','transform':'translateY(-'+num+'px)'}"
-    />
+    />-->
   </div>
 </template>
 <script>
-import util from "~/plugins/common";
 import http from "~/plugins/axios";
 import breadcrumb from "~/components/breadcrumb";
 import topMenu from "~/components/topMenu";
-import live2d from "~/components/live2d";
+// import live2d from "~/components/live2d";
 import Vue from "vue";
 export default {
   components: {
     breadcrumb,
-    topMenu,
-    live2d
+    topMenu
+    // live2d
   },
   // watchQuery: ["activeIndex"],
   data() {

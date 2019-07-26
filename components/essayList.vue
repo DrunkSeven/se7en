@@ -4,7 +4,7 @@
       <li v-for="(o,index) in dataList" :key="index">
         <nuxt-link class="essay-item" :to="`/essayDetail/${o.id}`">
           <div class="left-box">
-            <img width="60px" height="60px" :src="o.img" onerror="~/assets/img/header.jpg" />
+            <img width="60px" height="60px" :src="o.img" />
             <div class="box-center">
               <p class="title">{{o.title}}</p>
               <p class="intorduction">{{o.intorduction}}</p>
@@ -30,10 +30,13 @@
   </div>
 </template>
 <script>
+import errorImg from "~/assets/img/header.jpg";
 export default {
   props: ["dataList", "total", "pageIndex", "pageSize"],
   data() {
-    return {};
+    return {
+      errorImg: errorImg
+    };
   },
   methods: {
     currentChange: function(val) {

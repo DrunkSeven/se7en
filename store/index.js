@@ -11,10 +11,13 @@ const store = () => new Vuex.Store({
     breadcrumbList: [],
     activeIndex: "0",
     showHeader: true,
+    token: ""
   },
   mutations: {
     async getVerificationCode(state) {
-      state.code = await http.post("getVerificationCode", {}) || '';
+      const res = await http.post("/verificationCode", { token: state.token })
+      state.code = res.data || '';
+      state.token = res.token
     },
     showHeader(state, flag) {
       state.showHeader = flag;

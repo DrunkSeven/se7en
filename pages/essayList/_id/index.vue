@@ -33,7 +33,7 @@ export default {
     ]);
     const type = content.params.id == "all" ? undefined : content.params.id;
     const pageSize = 10;
-    const data = await http.get("/essay", {
+    const data = await content.app.$api.getEssay({
       type: type,
       pageSize: pageSize,
       pageIndex: 1
@@ -77,18 +77,18 @@ export default {
     },
     getDataList(pageIndex) {
       this.pageIndex = pageIndex || this.pageIndex;
-      http
-        .get("/essay", {
+      this.api
+        .getEssay({
           keyword: this.keyword,
           type: this.keyword ? undefined : this.type,
           pageSize: this.pageSize,
           pageIndex: this.pageIndex
         })
         .then(res => {
-          if (res.total) {
-            this.dataList = res.dataList;
-            this.total = res.total;
-          } else if (keyword) {
+          if (res.count) {
+            this.dataList = res.rows;
+            this.total = res.count;
+          } else if (this.keyword) {
             this.$message("啥也搜不到");
           }
         });

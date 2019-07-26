@@ -3,7 +3,7 @@
     <h1 class="essay-title">{{essayDetail.title}}</h1>
     <p class="update-time">
       <span>时间：</span>
-      {{essayDetail.createTime}}
+      {{util.changeTimeForm(essayDetail.createdAt).split(' ')[0]}}
     </p>
     <div class="detail-box" v-html="essayDetail.detail"></div>
   </section>
@@ -12,20 +12,18 @@
 import http from "~/plugins/axios";
 export default {
   // middleware: "response",
-  async asyncData(content) {
-    const essayDetail = await http.get("/essay", {
-      id: content.params.id
-    });
-    content.store.commit("changeActiveIndex", "1");
+  async asyncData({ store, app, params }) {
+    const essayDetail = await app.$api.getEssayById(params.id);
+    store.commit("changeActiveIndex", "1");
 
-    content.store.commit("changeBreadcrumb", [
+    store.commit("changeBreadcrumb", [
       { name: "列表", url: "/essayList/all" },
       {
-        name: essayDetail.data.title,
-        url: `/essayDetail/${content.params.id}`
+        name: essayDetail.title,
+        url: `/essayDetail/${params.id}`
       }
     ]);
-    return { essayDetail: essayDetail.data };
+    return { essayDetail: essayDetail };
   },
   validate({ params }) {
     return /^\d+$/.test(params.id);

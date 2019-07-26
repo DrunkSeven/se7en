@@ -29,20 +29,20 @@ export default {
     messageList,
     verificationCode
   },
-  async asyncData(content) {
-    content.store.commit("changeActiveIndex", "2");
-    content.store.commit("changeBreadcrumb", []);
+  async asyncData({ app, store }) {
+    store.commit("changeActiveIndex", "2");
+    store.commit("changeBreadcrumb", []);
     const pageSize = 10;
-    const message = await http.post("getMessage", {
+    const message = await app.$api.getMessage({
       pageSize: pageSize,
       pageIndex: 1
     });
     return {
       pageIndex: 1,
       pageSize: pageSize,
-      total: message.total,
-      messageList: message.dataList,
-      codeImg: content.store.code
+      total: message.count,
+      messageList: message.rows,
+      codeImg: store.code
     };
   },
   head() {
@@ -72,15 +72,15 @@ export default {
   methods: {
     getDataList(pageIndex) {
       this.pageIndex = pageIndex || this.pageIndex;
-      http
-        .post("getMessage", {
+      this.api
+        .getMessage({
           pageSize: this.pageSize,
           pageIndex: this.pageIndex
         })
         .then(res => {
-          if (res.total) {
-            this.messageList = res.dataList;
-            this.total = res.total;
+          if (res.rows.length) {
+            this.messageList = res.rows;
+            this.total = res.count;
           }
         });
     },
@@ -88,42 +88,40 @@ export default {
       this.codeStr = val;
     },
     submitMsg() {
+      console.log(this.util);
+
       if (this.disabled) {
-        this.$message("别点我");
+        this.util.info("别点我");
         return;
       }
       http
-        .post("setMessage", {
+        .post("/message", {
           msg: this.message,
-          code: this.codeStr
+          code: this.codeStr,
+          token: this.$store.state.token
         })
         .then(val => {
           if (val.flag) {
             this.$store.commit("getVerificationCode");
             this.codeStr = "";
             this.message = "";
-            this.$message({
-              message: "留言成功",
-              type: "success"
-            });
+            this.util.success("留言成功");
             this.getDataList(1);
           } else {
-            this.$message({
-              message: `留言失败,${val.msg}`,
-              type: "error"
-            });
+            this.$store.commit("getVerificationCode");
+            this.util.error("验证码错误");
           }
         });
     }
   },
   watch: {
     codeStr: function() {
-      this.message.length > 4 && this.codeStr.length == 5
+      this.message.length > 4 && this.codeStr.length == 4
         ? (this.disabled = false)
         : (this.disabled = true);
     },
     message: function() {
-      this.message.length > 4 && this.codeStr.length == 5
+      this.message.length > 4 && this.codeStr.length == 4
         ? (this.disabled = false)
         : (this.disabled = true);
     }

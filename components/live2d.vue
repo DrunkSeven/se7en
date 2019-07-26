@@ -36,7 +36,7 @@ export default {
     }
   },
   mounted() {
-    loadlive2d("live2d", "/model/model.json");
+    // loadlive2d("live2d", "/model/model.json");
   },
   methods: {
     hide() {
