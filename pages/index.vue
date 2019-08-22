@@ -91,11 +91,11 @@ export default {
   async asyncData({ app, store }) {
     store.commit("changeActiveIndex", "0");
     store.commit("changeBreadcrumb", []);
-    const data = await http.get("/essay", {
+    const data = await app.$api.getEssay({
       pageSize: 8,
       pageIndex: 1
     });
-    const message = await http.get("/message", {
+    const message = await app.$api.getMessage({
       pageSize: 5,
       pageIndex: 1
     });

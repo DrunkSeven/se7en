@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import http from './axios';
-import { Notification } from 'element-ui';
+import { Notification, Message } from 'element-ui';
 // import { Loading } from 'element-ui'
 const util = {
   install(Vue) {
@@ -24,6 +24,14 @@ const util = {
       }
     }
     return "";
+  },
+  message(message = '操作成功', type = "success", title = '系统提示', duration = 1000) {
+    Message({
+      title: title,
+      type: type,
+      message: message,
+      duration: duration,
+    });
   },
   success(message = '网络连接失败', duration = 3000) {
     Notification({

@@ -88,8 +88,6 @@ export default {
       this.codeStr = val;
     },
     submitMsg() {
-      console.log(this.util);
-
       if (this.disabled) {
         this.util.info("别点我");
         return;
