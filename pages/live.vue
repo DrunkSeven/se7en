@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="camera-box">
-      <p class="status">{{status}}</p>
+      <p class="status">{{rtc.iceConnectionState}}</p>
       <div class="send-box">
         <el-input type="text" placeholder="请输入房间号" v-model="roomId" />
         <el-button @click="closeWebRTC" v-if="rtc.iceConnectionState=='connected'">退出房间</el-button>
@@ -13,7 +13,8 @@
       </div>-->
       <video id="receivedVideo" autoplay></video>
       <video id="localVideo" autoplay muted></video>
-      <!-- <button @click="setDevice(1)">切换摄像头</button> -->
+
+      <button v-for="(item,index) in exArray" :key="index" @click="changeEx(item)">摄像头{{index+1}}</button>
       <!-- <button @click="startWebRTC" v-if="onlineList.length<2">创建房间</button> -->
     </div>
   </div>
@@ -55,6 +56,9 @@ export default {
     //创建socket连接
   },
   methods: {
+    changeEx(){
+
+    },
     send(data) {
       this.socket.emit("rtc", data);
     },
@@ -120,9 +124,7 @@ export default {
     setDevice(index = 0) {
       const mediaOpt = {
         audio: true,
-        video: {
-          deviceId: this.exArray[index]
-        }
+        video:true,
       };
       navigator.mediaDevices
         .getUserMedia(mediaOpt)
