@@ -39,7 +39,7 @@ export default {
     };
   },
   mounted() {
-    this.socket = io("http://api.se7en.com:7001", {
+    this.socket = io(process.env.baseUrl, {
       // 实际使用中可以在这里传递参数
       query: {
         room: "demo",

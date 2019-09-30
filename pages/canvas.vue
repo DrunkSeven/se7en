@@ -1,13 +1,21 @@
 <template>
-  <section class="canvas-body" onkeydown="onkeydown($event)"></section>
+  <section class="canvas-body" onkeydown="onkeydown($event)">
+    <canvas class="canvas" ref="canvas" />
+  </section>
 </template>
 <script>
 export default {
   data() {
-    return {};
+    return {
+      canvas: {},
+      cantext:{}
+    };
   },
 
-  mounted() {},
+  mounted() {
+    this.canvas = this.$refs.canvas;
+    0
+  },
   methods: {}
 };
 </script>

@@ -14,17 +14,17 @@ module.exports = {
       { hid: 'keywords', name: 'keywords', content: pkg.keywords },
       { hid: 'description', name: 'description', content: pkg.description }
     ],
-    script: [{ src: "http://res2.wx.qq.com/open/js/jweixin-1.4.0.js" }],
+    script: [{ src: "res2.wx.qq.com/open/js/jweixin-1.4.0.js" }],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/header.jpg' }
     ]
   },
   env: {
     title: "幻化成扇子的小窝",
-    baseUrl: 'http://api.se7en.com:7001',
+    // baseUrl: 'http://api.se7en.com:7001',
     HOST: pkg.config.nuxt.host,
-    PORT: pkg.config.nuxt.port
-    // baseUrl: 'http://120.79.88.200:7001/',
+    PORT: pkg.config.nuxt.port,
+    baseUrl: 'https://se7en.iego.net:7002',
   },
   /*
   ** Customize the progress-bar color
@@ -39,7 +39,7 @@ module.exports = {
     '~/assets/iconfont/iconfont.css'
   ],
   server: {
-    port: 80, // default: 3000
+    port: 81, // default: 3000
     host: '0.0.0.0', // default: localhost
   },
   /*
