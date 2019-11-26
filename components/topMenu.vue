@@ -18,15 +18,18 @@
           </div>
         </nuxt-link>
       </el-menu-item>
-      <el-menu-item index="3">
-        <nuxt-link to="/live">直播</nuxt-link>
-      </el-menu-item>
-      <el-menu-item index="4">
-        <nuxt-link to="/talk">聊天</nuxt-link>
-      </el-menu-item>
       <!-- <el-menu-item index="3">
+        <nuxt-link to="/live">直播</nuxt-link>
+      </el-menu-item> -->
+      <!-- <el-menu-item index="4">
+        <nuxt-link to="/talk">聊天</nuxt-link>
+      </el-menu-item> -->
+      <el-menu-item index="4">
+        <nuxt-link to="/canvas">画布</nuxt-link>
+      </el-menu-item>
+      <el-menu-item index="3">
         <nuxt-link to="/games/snake">游戏</nuxt-link>
-      </el-menu-item>-->
+      </el-menu-item>
       <el-menu-item index="2">
         <nuxt-link to="/message">留言</nuxt-link>
       </el-menu-item>

@@ -14,7 +14,7 @@ module.exports = {
       { hid: 'keywords', name: 'keywords', content: pkg.keywords },
       { hid: 'description', name: 'description', content: pkg.description }
     ],
-    script: [{ src: "http://res2.wx.qq.com/open/js/jweixin-1.4.0.js" }],
+    script: [{ src: "res2.wx.qq.com/open/js/jweixin-1.4.0.js" }],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/header.jpg' }
     ]
@@ -24,7 +24,11 @@ module.exports = {
     // baseUrl: 'http://api.se7en.com:7001',
     HOST: pkg.config.nuxt.host,
     PORT: pkg.config.nuxt.port,
+<<<<<<< HEAD
     baseUrl: 'https://120.79.88.200:7001/',
+=======
+    baseUrl: 'https://se7en.iego.net:7002',
+>>>>>>> f3f07377165bbd48542b0328c4d5958dd4bb7499
   },
   /*
   ** Customize the progress-bar color
