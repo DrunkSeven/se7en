@@ -56,9 +56,7 @@ export default {
     //创建socket连接
   },
   methods: {
-    changeEx(){
-
-    },
+    changeEx() {},
     send(data) {
       this.socket.emit("rtc", data);
     },
@@ -124,7 +122,7 @@ export default {
     setDevice(index = 0) {
       const mediaOpt = {
         audio: true,
-        video:true,
+        video: true
       };
       navigator.mediaDevices
         .getUserMedia(mediaOpt)
@@ -153,7 +151,7 @@ export default {
     },
 
     createSocket() {
-      this.socket = io("http://api.se7en.com:7001", {
+      this.socket = io("https://120.79.88.200:7001", {
         // 实际使用中可以在这里传递参数
         query: {
           room: this.roomId || 1520,

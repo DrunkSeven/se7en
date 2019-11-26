@@ -21,10 +21,10 @@ module.exports = {
   },
   env: {
     title: "幻化成扇子的小窝",
-    baseUrl: 'http://api.se7en.com:7001',
+    // baseUrl: 'http://api.se7en.com:7001',
     HOST: pkg.config.nuxt.host,
-    PORT: pkg.config.nuxt.port
-    // baseUrl: 'http://120.79.88.200:7001/',
+    PORT: pkg.config.nuxt.port,
+    baseUrl: 'https://120.79.88.200:7001/',
   },
   /*
   ** Customize the progress-bar color
@@ -39,7 +39,7 @@ module.exports = {
     '~/assets/iconfont/iconfont.css'
   ],
   server: {
-    port: 80, // default: 3000
+    port: 81, // default: 3000
     host: '0.0.0.0', // default: localhost
   },
   /*
