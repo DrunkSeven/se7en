@@ -24,11 +24,7 @@ module.exports = {
     // baseUrl: 'http://api.se7en.com:7001',
     HOST: pkg.config.nuxt.host,
     PORT: pkg.config.nuxt.port,
-<<<<<<< HEAD
     baseUrl: 'https://120.79.88.200:7001/',
-=======
-    baseUrl: 'https://se7en.iego.net:7002',
->>>>>>> f3f07377165bbd48542b0328c4d5958dd4bb7499
   },
   /*
   ** Customize the progress-bar color

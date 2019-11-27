@@ -1,53 +1,98 @@
 <template>
   <section class="canvas-body" onkeydown="onkeydown($event)">
     <div id="whiteboard">
-      <!-- <iframe id="ppt"
-            src="http://vip.ow365.cn/?i=34&n=5&furl=http%3A%2F%2Fofficeweb365.com%2Fviewfile%2F%E6%B7%B1%E5%85%A5%E6%B5%85%E5%87%BAHTML5%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91.pptx&p=1"
-      width="1186px" height="691px" frameborder="0"></iframe>-->
+      <iframe
+        id="ppt"
+        src="http://vip.ow365.cn/?i=34&n=5&furl=http%3A%2F%2Fofficeweb365.com%2Fviewfile%2F%E6%B7%B1%E5%85%A5%E6%B5%85%E5%87%BAHTML5%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91.pptx&p=1"
+        width="1186px"
+        height="691px"
+        frameborder="0"
+      ></iframe>
+      <!-- <iframe id="ppt" frameborder="0"></iframe> -->
       <canvas ref="canvas" id="canvas" width="640" height="480"></canvas>
     </div>
     <div id="ctrl-box">
       <div class="util-box">
         <span class="label">工具:</span>
-        <button
+        <el-button
+          :type="item.type==drawObj.type?'primary':''"
           v-for="item in utilType"
           :key="item.type"
-          class="util"
           @click="selectUtil(item.type)"
-        >{{item.name}}</button>
+          size="mini"
+        >{{item.name}}</el-button>
 
         <div class="poly-box">
-          <button class="util" data-type="poly">正多边形</button>
-          <input type="number" id="polyLine" value="3" max="9" min="3" maxlength="2" />
+          <el-button
+            @click="selectUtil('poly')"
+            size="mini"
+            :type="drawObj.type=='poly'?'primary':''"
+          >正多边形</el-button>
+          <el-input-number
+            size="mini"
+            type="number"
+            v-model="drawObj.polyLine"
+            value="3"
+            :max="9"
+            :min="3"
+          />
         </div>
-        <button class="util" data-type="cut">剪切</button>
-        <button class="util" data-type="cancel">撤销</button>
+        <el-button size="mini" @click="selectUtil('cut')">剪切</el-button>
+        <el-button size="mini" @click="selectUtil('cancel')">撤销</el-button>
       </div>
       <div class="util-box">
         <span class="label">线条:</span>
-        <button class="util" data-type="line">实线</button>
-        <button class="util" data-type="dash">虚线</button>
-        <span class="label">粗细:</span>
-        <input id="lineWidth" type="range" min="1" max="20" value="1" />
-        <span id="lineWidthValue">1</span>
+        <el-switch
+          v-model="drawObj.dashLine"
+          active-color="#409EFF"
+          inactive-color="#ff4949"
+          active-text="虚线"
+          inactive-text="实线"
+        ></el-switch>
+        <div class="line-width-box">
+          <span class="label">粗细:</span>
+          <el-slider class="line-width" v-model="drawObj.lineWidth" :max="20" :min="1"></el-slider>
+        </div>
+        <!-- <input type="range" min="1" max="20" value="1" /> -->
         <div class="select-color-box">
           <span class="label">颜色:</span>
-          <span ref="selectColor" class="color" style="background: #000"></span>
+          <span ref="selectColor" class="color" :style="{'background': drawObj.color}"></span>
         </div>
         <span
           class="color"
           v-for="item in color"
           :key="item"
           :style="{'background':item}"
-          @click="selectColor(item)"
+          @click="drawObj.color=item"
+        ></span>
+      </div>
+      <div class="util-box">
+        <span class="label">填充:</span>
+        <el-switch
+          v-model="drawObj.fill"
+          active-color="#409EFF"
+          inactive-color="#ff4949"
+          active-text="是"
+          inactive-text="否"
+        ></el-switch>
+        <div class="select-color-box">
+          <span class="label">颜色:</span>
+          <span class="color" :style="{'background': drawObj.fillColor}"></span>
+        </div>
+        <span
+          class="color"
+          v-for="item in color"
+          :key="item"
+          :style="{'background':item}"
+          @click="drawObj.fillColor=item,drawObj.fill=true"
         ></span>
       </div>
       <div class="control-box">
-        <button id="prePage">上一张</button>
+        <el-button @click="setPage('prePage')">上一张</el-button>
         <!-- <button id="preAnim">上一个动画</button>
-            <button>重置</button>
+        <button>重置</button>
         <button id="nextAnim">下一个动画</button>-->
-        <button id="nextPage">下一张</button>
+        <el-button @click="setPage('nextPage')">下一张</el-button>
       </div>
     </div>
   </section>
@@ -68,16 +113,21 @@ export default {
       color: ["#000000", "#FFFFFF", "#FF0000", "#0000FF", "#FFFF00", "#9AFF02"],
       socket: {},
       draw: {},
-      pageArr: {},
-      otherDrawObj: {},
+      ctxArr: [],
+      pageArr: {}, //页面画布数组对象
+      otherDrawObj: {}, //外界的操作对象
       canvas: {},
+      ctx: {},
       drawObj: {
+        fill: false,
+        fillColor: "#000",
         pageIndex: 0,
         animationIndex: 0,
         type: "pen",
         polyLine: 3,
         color: "#000000",
-        lineWidth: 1
+        lineWidth: 3,
+        dashLine: false
       }
     };
   },
@@ -87,41 +137,30 @@ export default {
     this.canvas = this.$refs.canvas;
     this.ctx = this.canvas.getContext("2d");
     this.draw = new Draw(this.ctx);
-    // let arr: Array<ImageData> = [];
     let teacher = this.$route.query.teacher;
     console.dir(teacher);
     // if (!teacher) {
     //   ctrlBox.style.display = "none";
     // }
     this.draw.type = this.drawObj.type;
-    // lineWidth.addEventListener("change", e => {
-    //   const target = e.target;
-    //   drawObj.lineWidth = parseInt(target.value);
-    //   document.getElementById("lineWidthValue").innerText = target.value;
-    // });
-    // polyLineDom.addEventListener("change", e => {
-    //   const target = e.target;
-    //   let num = parseInt(target.value);
-    //   drawObj.type = "poly";
-    //   if (num > 2 && num < 10) {
-    //     drawObj.polyLine = num;
-    //   } else {
-    //     target.value = drawObj.polyLine.toString();
-    //   }
-    // });
     // if (teacher) {
 
     this.canvas.onmousedown = e => {
       let x = e.offsetX;
       let y = e.offsetY;
+      let path = [];
       this.onmousedown(x, y, true);
       this.canvas.onmousemove = e => {
         let x1 = e.offsetX;
         let y1 = e.offsetY;
         this.onmousemove(x, y, x1, y1, true);
+        path.push({ x: x1, y: y1 });
       };
       document.onmouseup = e => {
         this.onmouseup(true);
+        let drawInfo = Object.assign({ path: path }, this.drawObj);
+        this.ctxArr.push(drawInfo);
+        console.log(this.ctxArr);
       };
     };
     // }
@@ -129,7 +168,53 @@ export default {
       this.canvas.width = whiteboard.offsetWidth;
       this.canvas.height = whiteboard.offsetHeight;
     }, 100);
+    window.addEventListener(
+      "message",
+      event => {
+        console.log(event);
+        if (event.data && event.data[0] == "pptAction") {
+          if (this.drawObj.pageIndex != event.data[1]) {
+            this.drawObj.pageIndex = event.data[1];
 
+            if (!this.pageArr[this.drawObj.pageIndex]) {
+              this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            } else {
+              let arr = this.pageArr[this.drawObj.pageIndex];
+              if (arr.length > 0) {
+                this.ctx.putImageData(
+                  arr[arr.length - 1],
+                  0,
+                  0,
+                  0,
+                  0,
+                  this.canvas.width,
+                  this.canvas.height
+                );
+              }
+            }
+          }
+          this.drawObj.animationIndex = event.data[2] || 0;
+          if (this.teacher) {
+            let diff = {
+              action: "changepage",
+              data: event.data
+            };
+            socket.emit("ppt", diff);
+          } else if (
+            this.otherDrawObj.pageIndex &&
+            this.otherDrawObj.pageIndex != this.drawObj.pageIndex
+          ) {
+            syncPPTPage();
+          } else if (
+            this.otherDrawObj.animationIndex &&
+            this.otherDrawObj.animationIndex != this.drawObj.animationIndex
+          ) {
+            syncPPTAction();
+          }
+        }
+      },
+      false
+    );
     // this.socket.on("draw", function(diff) {
     //   console.log(diff);
     //   let {
@@ -160,12 +245,6 @@ export default {
     //   otherDrawObj.animationIndex = diff.data[2];
     //   syncPPTPage();
     // });
-    prePage.addEventListener("click", () => {
-      setPage("prePage");
-    });
-    nextPage.addEventListener("click", () => {
-      setPage("nextPage");
-    });
     // preAnim.addEventListener("click", () => {
     //     setPage('preAnim')
     // })
@@ -174,10 +253,18 @@ export default {
     // })
   },
   methods: {
+    setPage(type) {
+      let ppt = document.getElementById("ppt");
+      console.log(type);
+      if (Number.isInteger(type)) {
+        ppt.contentWindow.postMessage("goPage," + type, "*");
+      } else {
+        ppt.contentWindow.postMessage(type, "*");
+      }
+    },
     selectUtil(type) {
       let arr = this.pageArr[this.drawObj.pageIndex];
-      this.drawObj.type = type;
-      if (type == "cancel") {
+      if (type == "cancel" && arr) {
         arr.pop();
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         if (arr.length > 0) {
@@ -191,18 +278,16 @@ export default {
             this.canvas.height
           );
         }
+      } else if (type != "cancel") {
+        this.drawObj.type = type;
       }
     },
     selectColor(color) {
       this.drawObj.color = color;
-      this.$refs.selectColor.style.background = this.drawObj.color;
     },
     onmousedown(x, y, sendMsg) {
       if (sendMsg) {
-        this.draw.color = this.drawObj.color;
-        this.draw.lineWidth = this.drawObj.lineWidth;
-        this.draw.polyLine = this.drawObj.polyLine;
-        this.draw.type = this.drawObj.type;
+        Object.assign(this.draw, this.drawObj);
         let diff = {
           action: "onmousedown",
           type: this.drawObj.type,
@@ -284,7 +369,7 @@ export default {
 .canvas-body {
   position: relative;
 }
-.line-width-box,
+
 .color-box,
 .util-box {
   padding: 5px 10px;
@@ -292,7 +377,14 @@ export default {
   align-items: center;
   /* justify-content: center; */
 }
-
+.line-width-box {
+  display: flex;
+  align-items: center;
+  margin: 0 20px;
+}
+.line-width {
+  min-width: 100px;
+}
 #whiteboard {
   border: 1px solid #000;
   width: 640px;
@@ -325,22 +417,6 @@ export default {
 
 .label {
   margin-right: 10px;
-}
-
-.util {
-  background: #fff;
-  min-width: 60px;
-  height: 30px;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid #ccc;
-  margin-right: 2px;
-}
-
-.util:hover {
-  border: 1px solid #409eff;
-  color: #409eff;
-  transform: scale(1.1);
 }
 
 .poly-box {
