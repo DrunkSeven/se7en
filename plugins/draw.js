@@ -60,7 +60,7 @@ export default class Draw {
     this.ctx.lineWidth = this._lineWidth;
     this.polyLine = this._polyLine;
     if (this._dashLine) {
-      this.ctx.setLineDash([4, 2]);
+      this.ctx.setLineDash([this._lineWidth, this._lineWidth * 2]);
     } else {
       this.ctx.setLineDash([0]);
     }
@@ -136,6 +136,7 @@ export default class Draw {
     this.ctx.lineTo(x1, y1);
     this.ctx.stroke();
     this.ctx.restore();
+
   }
   eraser(x, y, x1, y1) {
     let width = 10;
