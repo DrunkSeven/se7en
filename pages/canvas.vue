@@ -11,6 +11,22 @@
       ></iframe>-->
       <iframe id="ppt" frameborder="0"></iframe>
       <canvas ref="canvas" id="canvas" width="640" height="480"></canvas>
+      <img
+        v-show="shwoDrag"
+        draggable="true"
+        @dragstart="dragStart"
+        @drag="dragEvent"
+        @dragend="dragEnd"
+        @touchstart="dragStart"
+        @touchmove="dragEvent"
+        @touchend="dragEnd"
+        id="drag"
+        class="drag"
+        width="20px"
+        height="20px"
+        :style="{'left':dragPosition.x-10+'px','top':dragPosition.y-10+'px'}"
+        src="~assets/img/drag.png"
+      />
     </div>
     <div id="ctrl-box">
       <div class="util-box">
@@ -105,7 +121,13 @@ import io from "socket.io-client";
 export default {
   data() {
     return {
+      shwoDrag: false,
+      isMobile: false,
       time: 0,
+      dragPosition: {
+        x: 0,
+        y: 0
+      },
       utilType: [
         { type: "pen", name: "铅笔" },
         { type: "line", name: "线条" },
@@ -115,10 +137,10 @@ export default {
       ],
       color: ["#000000", "#FFFFFF", "#FF0000", "#0000FF", "#FFFF00", "#9AFF02"],
       socket: {},
+      drag: {},
       isPlayback: false,
       ctxArrIndex: 0, //回放时记录ctxArr位置的指针
       draw: {}, //绘图工具类
-      ctxArr: [], //保存绘图的路径和各种参数
       pageArr: {}, //页面画布数组对象
       otherDrawObj: {}, //外界的操作对象
       canvas: {}, //画布
@@ -147,31 +169,41 @@ export default {
     let teacher = this.$route.query.teacher; //是否是老是端
     this.draw = new Draw(this.ctx); //创建绘画工具实例
     let { top, left } = this.canvas.getBoundingClientRect(); //获取画布离屏幕顶部和左边的距离
-
+    this.drag = document.getElementById("drag");
     // if (!teacher) {
     //   ctrlBox.style.display = "none";
     // }
     // if (teacher) {
-    if (this.util.showMobileTheme()) {
+    this.isMobile = this.util.showMobileTheme();
+    if (this.isMobile) {
       //移动端触发移动端事件
       this.canvas.ontouchstart = e => {
         let x = e.targetTouches[0].pageX - left; //移动端要减去屏幕左边和顶部的距离,获取到手指相对于画布的坐标位置
         let y = e.targetTouches[0].pageY - top;
+        let x1 = 0;
+        let y1 = 0;
         this.path = [];
+        let time = this.time;
         this.onmousedown(x, y, true);
         this.canvas.ontouchmove = e => {
-          let x1 = e.targetTouches[0].pageX - left;
-          let y1 = e.targetTouches[0].pageY - top;
+          x1 = e.targetTouches[0].pageX - left;
+          y1 = e.targetTouches[0].pageY - top;
           this.onmousemove(x, y, x1, y1, true);
         };
         document.ontouchend = e => {
           this.onmouseup(true);
           let drawInfo = Object.assign(
-            { path: this.path, time: this.time },
+            {
+              path: this.path,
+              time: time,
+              startPath: [x, y],
+              endPath: [x1, y1]
+            },
             this.drawObj
           );
-          this.ctxArr.push(drawInfo);
-          console.log(this.ctxArr);
+          this.draw.ctxArr.push(drawInfo);
+          this.dragPosition.x = x;
+          this.dragPosition.y = y;
         };
       };
     } else {
@@ -179,6 +211,7 @@ export default {
       this.canvas.onmousedown = e => {
         let x = e.offsetX;
         let y = e.offsetY;
+        let time = this.time;
         this.path = [];
         this.onmousedown(x, y, true);
         this.canvas.onmousemove = e => {
@@ -189,11 +222,28 @@ export default {
         document.onmouseup = e => {
           this.onmouseup(true);
           let drawInfo = Object.assign(
-            { path: this.path, time: this.time },
+            {
+              path: this.path,
+              time: time,
+              startPath: [x, y],
+              endPath: [e.offsetX, e.offsetY]
+            },
             this.drawObj
           );
-          this.ctxArr.push(drawInfo);
-          console.log(this.ctxArr);
+          this.draw.ctxArr.push(drawInfo);
+          console.log(this.draw.type);
+
+          if (
+            this.draw.type != "pen" &&
+            this.draw.type != "eraser" &&
+            this.draw.type != "cancel"
+          ) {
+            this.shwoDrag = true;
+            this.dragPosition.x = x;
+            this.dragPosition.y = y;
+          } else {
+            this.shwoDrag = false;
+          }
         };
       };
     }
@@ -203,6 +253,18 @@ export default {
       this.canvas.width = whiteboard.offsetWidth;
       this.canvas.height = whiteboard.offsetHeight;
     }, 100);
+    // let drag = document.getElementById("drag");
+    // drag.onmousedown = event => {
+    //   var addx = event.clientX - drag.offsetLeft;
+    //   var addy = event.clientY - drag.offsetTop;
+    //   drag.onmousemove = function(event) {
+    //     drag.style.left = event.clientX - addx + "px";
+    //     drag.style.top = event.clientY - addy + "px";
+    //   };
+    // };
+    // drag.onmouseup = function() {
+    //   drag.onmousemove = null;
+    // };
     window.addEventListener(
       //获取iframe发来的消息
       "message",
@@ -276,6 +338,53 @@ export default {
     });
   },
   methods: {
+    dragStart(e) {
+      e.stopPropagation();
+      this.pageArr[this.drawObj.pageIndex].pop();
+    },
+    dragEvent(e) {
+      e.stopPropagation();
+      // if (this.isMobile) {
+      let { top, left } = this.canvas.getBoundingClientRect();
+      this.dragPosition.x = this.isMobile
+        ? e.targetTouches[0].pageX - left
+        : e.pageX - left;
+      this.dragPosition.y = this.isMobile
+        ? e.targetTouches[0].pageY - top
+        : e.pageY - top;
+      let [x, y] = this.draw.ctxArr[this.draw.ctxArr.length - 1].startPath;
+      let [x1, y1] = this.draw.ctxArr[this.draw.ctxArr.length - 1].endPath;
+      let offsetX = this.dragPosition.x - x;
+      let offsetY = this.dragPosition.y - y;
+      this.onmousemove(
+        this.dragPosition.x,
+        this.dragPosition.y,
+        x1 + offsetX,
+        y1 + offsetY,
+        false
+      );
+      // }
+    },
+    dragEnd(e) {
+      e.stopPropagation();
+      if (!this.isMobile) {
+        let { top, left } = this.canvas.getBoundingClientRect();
+        this.dragPosition.x = e.pageX - left;
+        this.dragPosition.y = e.pageY - top;
+      }
+      let [x, y] = this.draw.ctxArr[this.draw.ctxArr.length - 1].startPath;
+      let [x1, y1] = this.draw.ctxArr[this.draw.ctxArr.length - 1].endPath;
+      let offsetX = this.dragPosition.x - x;
+      let offsetY = this.dragPosition.y - y;
+      this.onmousemove(
+        this.dragPosition.x,
+        this.dragPosition.y,
+        x1 + offsetX,
+        y1 + offsetY,
+        false
+      );
+      this.onmouseup();
+    },
     drawTimer() {
       //计时器
       setInterval(() => {
@@ -283,13 +392,13 @@ export default {
         //= new Date().getTime();
         if (
           this.isPlayback &&
-          this.time >= this.ctxArr[this.ctxArrIndex].time &&
+          this.time >= this.draw.ctxArr[this.ctxArrIndex].time &&
           !this.drawing
         ) {
           //如果正在回放时间大于或等于当时图形生成的时间,开始绘制图形,计时器继续跑
-          this.reDraw(this.ctxArr[this.ctxArrIndex++]);
+          this.reDraw(this.draw.ctxArr[this.ctxArrIndex++]);
         }
-        if (!this.ctxArr[this.ctxArrIndex]) {
+        if (!this.draw.ctxArr[this.ctxArrIndex]) {
           //如果没有下一个图形,结束回放
           this.isPlayback = false;
         }
@@ -333,9 +442,9 @@ export default {
         this.drawing = false;
         if (
           this.isPlayback &&
-          this.time >= this.ctxArr[this.ctxArrIndex].time //如果回放没结束并且,当时图形生成的时间小于回放的时间,绘制下一个图形
+          this.time >= this.draw.ctxArr[this.ctxArrIndex].time //如果回放没结束并且,当时图形生成的时间小于回放的时间,绘制下一个图形
         ) {
-          this.reDraw(this.ctxArr[this.ctxArrIndex++]);
+          this.reDraw(this.draw.ctxArr[this.ctxArrIndex++]);
         }
       });
     },
@@ -384,6 +493,7 @@ export default {
       //设置颜色
       this.drawObj.color = color;
     },
+    editShape() {},
     onmousedown(x, y, sendMsg) {
       //sandMsg可以判断是否是用户自主操作
       if (sendMsg) {
@@ -418,7 +528,7 @@ export default {
         //如果用户点击的类型不是橡皮擦
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); //先清除画布
         if (arr.length != 0) {
-          //在画布上绘制出最后一个页面,这样用户就能看到自己绘制的过程
+          //在画布上绘制出最后一个页面
           this.ctx.putImageData(
             arr[arr.length - 1],
             0,
@@ -467,6 +577,13 @@ export default {
 <style lang="less" scoped>
 #canvas {
   max-width: 100%;
+}
+.drag {
+  position: absolute;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  cursor: pointer;
 }
 .canvas-body {
   position: relative;

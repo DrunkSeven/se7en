@@ -8,9 +8,17 @@ export default class Draw {
   _lineWidth;
   _polyLine;
   _dashLine;
+  _ctxArr;
   constructor(ctx, type) {
     this.type = type || 'stroke'
     this.ctx = ctx;
+    this.ctxArr = []
+  }
+  set ctxArr(val) {
+    this._ctxArr = val;
+  }
+  get ctxArr() {
+    return this._ctxArr
   }
   set dashLine(val) {
     this._dashLine = val;
@@ -145,6 +153,10 @@ export default class Draw {
     }
     this.ctx.lineCap = "round";
     this.ctx.clearRect(x1 - width / 2, y1 - width / 2, width, width);
+  }
+  getShape(drawInfo) {
+    // console.log(drawInfo);
+
   }
   cut(x, y, x1, y1) {
     this.init();
