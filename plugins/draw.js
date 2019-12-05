@@ -68,7 +68,7 @@ export default class Draw {
     this.ctx.lineWidth = this._lineWidth;
     this.polyLine = this._polyLine;
     if (this._dashLine) {
-      this.ctx.setLineDash([this._lineWidth, this._lineWidth * 2]);
+      this.ctx.setLineDash([this._lineWidth * 2, this._lineWidth]);
     } else {
       this.ctx.setLineDash([0]);
     }
@@ -96,6 +96,17 @@ export default class Draw {
     let r = Math.sqrt(Math.pow(x - x1, 2) + Math.pow(y - y1, 2));
     this.ctx.beginPath();
     this.ctx.arc(x, y, r, 0, 2 * Math.PI);
+    if (this._fill) {
+      this.ctx.fill();
+      this.ctx.stroke();
+    } else {
+      this.ctx.stroke();
+    }
+  }
+  ellipse(x, y, x1, y1) {
+    this.init();
+    this.ctx.beginPath();
+    this.ctx.ellipse(x, y, Math.abs(x - x1), Math.abs(y - y1), 0, 0, 2 * Math.PI);
     if (this._fill) {
       this.ctx.fill();
       this.ctx.stroke();

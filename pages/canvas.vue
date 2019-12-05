@@ -11,21 +11,13 @@
       ></iframe>-->
       <iframe id="ppt" frameborder="0"></iframe>
       <canvas ref="canvas" id="canvas" width="640" height="480"></canvas>
-      <img
-        v-show="shwoDrag"
-        draggable="true"
-        @dragstart="dragStart"
-        @drag="dragEvent"
-        @dragend="dragEnd"
-        @touchstart="dragStart"
-        @touchmove="dragEvent"
-        @touchend="dragEnd"
-        id="drag"
-        class="drag"
-        width="20px"
-        height="20px"
-        :style="{'left':dragPosition.x-10+'px','top':dragPosition.y-10+'px'}"
-        src="~assets/img/drag.png"
+      <svgDraw
+        id="svg"
+        :drawObj="drawObj"
+        @onmouseup="onmouseup"
+        @onmousemove="onmousemove"
+        @onmousedown="onmousedown"
+        v-show="shwoSvg"
       />
     </div>
     <div id="ctrl-box">
@@ -118,25 +110,25 @@
 <script>
 import Draw from "./../plugins/draw";
 import io from "socket.io-client";
+import svgDraw from "./../components/svgDraw";
 export default {
+  components: {
+    svgDraw
+  },
   data() {
     return {
-      shwoDrag: false,
       isMobile: false,
       time: 0,
-      dragPosition: {
-        x: 0,
-        y: 0
-      },
       utilType: [
         { type: "pen", name: "铅笔" },
         { type: "line", name: "线条" },
-        { type: "circle", name: "圈圈" },
+        { type: "ellipse", name: "圈圈" },
         { type: "rect", name: "矩形" },
         { type: "eraser", name: "橡皮" }
       ],
       color: ["#000000", "#FFFFFF", "#FF0000", "#0000FF", "#FFFF00", "#9AFF02"],
       socket: {},
+      shwoSvg: true,
       drag: {},
       isPlayback: false,
       ctxArrIndex: 0, //回放时记录ctxArr位置的指针
@@ -156,7 +148,14 @@ export default {
         polyLine: 3,
         color: "#FF0000",
         lineWidth: 3,
-        dashLine: false
+        dashLine: false,
+        position: {
+          x: 0,
+          y: 0,
+          x1: 0,
+          y1: 0,
+          angle: 0
+        }
       }
     };
   },
@@ -168,103 +167,18 @@ export default {
     this.ctx = this.canvas.getContext("2d"); //获取到画布对象
     let teacher = this.$route.query.teacher; //是否是老是端
     this.draw = new Draw(this.ctx); //创建绘画工具实例
-    let { top, left } = this.canvas.getBoundingClientRect(); //获取画布离屏幕顶部和左边的距离
-    this.drag = document.getElementById("drag");
+
     // if (!teacher) {
     //   ctrlBox.style.display = "none";
     // }
     // if (teacher) {
-    this.isMobile = this.util.showMobileTheme();
-    if (this.isMobile) {
-      //移动端触发移动端事件
-      this.canvas.ontouchstart = e => {
-        let x = e.targetTouches[0].pageX - left; //移动端要减去屏幕左边和顶部的距离,获取到手指相对于画布的坐标位置
-        let y = e.targetTouches[0].pageY - top;
-        let x1 = 0;
-        let y1 = 0;
-        this.path = [];
-        let time = this.time;
-        this.onmousedown(x, y, true);
-        this.canvas.ontouchmove = e => {
-          x1 = e.targetTouches[0].pageX - left;
-          y1 = e.targetTouches[0].pageY - top;
-          this.onmousemove(x, y, x1, y1, true);
-        };
-        document.ontouchend = e => {
-          this.onmouseup(true);
-          let drawInfo = Object.assign(
-            {
-              path: this.path,
-              time: time,
-              startPath: [x, y],
-              endPath: [x1, y1]
-            },
-            this.drawObj
-          );
-          this.draw.ctxArr.push(drawInfo);
-          this.dragPosition.x = x;
-          this.dragPosition.y = y;
-        };
-      };
-    } else {
-      //pc端触发鼠标点击事件
-      this.canvas.onmousedown = e => {
-        let x = e.offsetX;
-        let y = e.offsetY;
-        let time = this.time;
-        this.path = [];
-        this.onmousedown(x, y, true);
-        this.canvas.onmousemove = e => {
-          let x1 = e.offsetX;
-          let y1 = e.offsetY;
-          this.onmousemove(x, y, x1, y1, true);
-        };
-        document.onmouseup = e => {
-          this.onmouseup(true);
-          let drawInfo = Object.assign(
-            {
-              path: this.path,
-              time: time,
-              startPath: [x, y],
-              endPath: [e.offsetX, e.offsetY]
-            },
-            this.drawObj
-          );
-          this.draw.ctxArr.push(drawInfo);
-          console.log(this.draw.type);
 
-          if (
-            this.draw.type != "pen" &&
-            this.draw.type != "eraser" &&
-            this.draw.type != "cancel"
-          ) {
-            this.shwoDrag = true;
-            this.dragPosition.x = x;
-            this.dragPosition.y = y;
-          } else {
-            this.shwoDrag = false;
-          }
-        };
-      };
-    }
     // }
     setTimeout(() => {
       //页面渲染完后设置画布的大小
       this.canvas.width = whiteboard.offsetWidth;
       this.canvas.height = whiteboard.offsetHeight;
     }, 100);
-    // let drag = document.getElementById("drag");
-    // drag.onmousedown = event => {
-    //   var addx = event.clientX - drag.offsetLeft;
-    //   var addy = event.clientY - drag.offsetTop;
-    //   drag.onmousemove = function(event) {
-    //     drag.style.left = event.clientX - addx + "px";
-    //     drag.style.top = event.clientY - addy + "px";
-    //   };
-    // };
-    // drag.onmouseup = function() {
-    //   drag.onmousemove = null;
-    // };
     window.addEventListener(
       //获取iframe发来的消息
       "message",
@@ -338,53 +252,6 @@ export default {
     });
   },
   methods: {
-    dragStart(e) {
-      e.stopPropagation();
-      this.pageArr[this.drawObj.pageIndex].pop();
-    },
-    dragEvent(e) {
-      e.stopPropagation();
-      // if (this.isMobile) {
-      let { top, left } = this.canvas.getBoundingClientRect();
-      this.dragPosition.x = this.isMobile
-        ? e.targetTouches[0].pageX - left
-        : e.pageX - left;
-      this.dragPosition.y = this.isMobile
-        ? e.targetTouches[0].pageY - top
-        : e.pageY - top;
-      let [x, y] = this.draw.ctxArr[this.draw.ctxArr.length - 1].startPath;
-      let [x1, y1] = this.draw.ctxArr[this.draw.ctxArr.length - 1].endPath;
-      let offsetX = this.dragPosition.x - x;
-      let offsetY = this.dragPosition.y - y;
-      this.onmousemove(
-        this.dragPosition.x,
-        this.dragPosition.y,
-        x1 + offsetX,
-        y1 + offsetY,
-        false
-      );
-      // }
-    },
-    dragEnd(e) {
-      e.stopPropagation();
-      if (!this.isMobile) {
-        let { top, left } = this.canvas.getBoundingClientRect();
-        this.dragPosition.x = e.pageX - left;
-        this.dragPosition.y = e.pageY - top;
-      }
-      let [x, y] = this.draw.ctxArr[this.draw.ctxArr.length - 1].startPath;
-      let [x1, y1] = this.draw.ctxArr[this.draw.ctxArr.length - 1].endPath;
-      let offsetX = this.dragPosition.x - x;
-      let offsetY = this.dragPosition.y - y;
-      this.onmousemove(
-        this.dragPosition.x,
-        this.dragPosition.y,
-        x1 + offsetX,
-        y1 + offsetY,
-        false
-      );
-      this.onmouseup();
-    },
     drawTimer() {
       //计时器
       setInterval(() => {
@@ -486,15 +353,28 @@ export default {
           );
         }
       } else if (type != "cancel") {
+        this.drawCanvas();
+        this.drawObj.position = {};
         this.drawObj.type = type;
+        // this.svgDraw=true;
+        // if(type=="pen"||type=="eraser"){
+        //   this.svgDraw=false;
+        // }
       }
     },
     selectColor(color) {
       //设置颜色
       this.drawObj.color = color;
     },
-    editShape() {},
-    onmousedown(x, y, sendMsg) {
+    drawCanvas() {
+      let { x, y, x1, y1 } = this.drawObj.position;
+      if (x || y || x1 || y1) {
+        Object.assign(this.draw, this.drawObj);
+        this.draw[this.draw.type](x, y, x1, y1);
+        this.shwoDrag = false;
+      }
+    },
+    onmousedown({ x, y, sendMsg }) {
       //sandMsg可以判断是否是用户自主操作
       if (sendMsg) {
         Object.assign(this.draw, this.drawObj);
@@ -514,33 +394,20 @@ export default {
         //如果当前的工具时铅笔,绘制之前要调用特别的方法
         this.ctx.beginPath();
         this.ctx.moveTo(x, y);
+      } else {
+        this.drawCanvas();
       }
     },
-    onmousemove(x, y, x1, y1, sendMsg) {
+    onmousemove({ x, y, x1, y1, sendMsg }) {
+      console.log(x);
+
       //鼠标或手指移动时的事件
       if (!this.pageArr[this.drawObj.pageIndex]) {
         //如果页面信息数组为空,创建一个页面
         this.pageArr[this.drawObj.pageIndex] = [];
       }
       let arr = this.pageArr[this.drawObj.pageIndex];
-
-      if (this.draw.type != "eraser") {
-        //如果用户点击的类型不是橡皮擦
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); //先清除画布
-        if (arr.length != 0) {
-          //在画布上绘制出最后一个页面
-          this.ctx.putImageData(
-            arr[arr.length - 1],
-            0,
-            0,
-            0,
-            0,
-            this.canvas.width,
-            this.canvas.height
-          );
-        }
-      }
-      this.draw[this.draw.type](x, y, x1, y1); //绘制图形
+      this.draw[this.draw.type](x, y, x1, y1);
       if (sendMsg) {
         let diff = {
           action: "onmousemove",
@@ -556,6 +423,10 @@ export default {
       }
     },
     onmouseup(sendMsg) {
+      if (!this.pageArr[this.drawObj.pageIndex]) {
+        //如果页面信息数组为空,创建一个页面
+        this.pageArr[this.drawObj.pageIndex] = [];
+      }
       let arr = this.pageArr[this.drawObj.pageIndex];
       this.canvas.onmousemove = null;
       document.onmouseup = null;
@@ -578,12 +449,12 @@ export default {
 #canvas {
   max-width: 100%;
 }
-.drag {
+#svg {
   position: absolute;
-  z-index: 100;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
   top: 0;
-  left: 0;
-  cursor: pointer;
 }
 .canvas-body {
   position: relative;
