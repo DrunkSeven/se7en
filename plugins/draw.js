@@ -128,15 +128,20 @@ export default class Draw {
     let ctx = this.ctx;
     let r = Math.sqrt(Math.pow(x - x1, 2) + Math.pow(y - y1, 2));;
     ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(Math.PI / 2);
-    let nx = r * Math.cos(Math.PI / n);
-    let ny = r * Math.sin(Math.PI / n);
+    // ctx.translate(x, y);
+    // ctx.rotate(Math.PI / 2);
     ctx.beginPath();
-    ctx.moveTo(nx, ny);
+
     for (let i = 0; i <= n; i++) {
-      ctx.rotate(Math.PI * 2 / n);
-      ctx.lineTo(nx, -ny);
+      // ctx.rotate(Math.PI * 2 / n);
+      let radian = ((2 * Math.PI) / this.polyLine) * i;
+      let radian1 = ((2 * Math.PI) / this.polyLine) * (i + 1);
+      let nx = r * Math.sin(radian) + x;
+      let ny = r * -Math.cos(radian) + y;
+      let nx1 = r * Math.sin(radian1) + x;
+      let ny1 = r * -Math.cos(radian1) + y;
+      ctx.moveTo(nx, ny);
+      ctx.lineTo(nx1, ny1);
     }
     ctx.closePath();     //闭合路径否则首位衔接处会怪怪的
     if (this._fill) {

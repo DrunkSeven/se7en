@@ -71,7 +71,7 @@
       :style="{'left':drawObj.position.x-10+'px','top':drawObj.position.y-10+'px'}"
       src="~assets/img/drag.png"
     />
-    <img
+    <!-- <img
       v-show="shwoDrag"
       draggable="true"
       @dragstart="dragStart($event,'rotate')"
@@ -86,7 +86,7 @@
       height="20px"
       :style="{'left':drawObj.position.x1-10+'px','top':drawObj.position.y1-10+'px'}"
       src="~assets/img/rotate.png"
-    />
+    />-->
   </div>
 </template>
 <script>
@@ -160,15 +160,14 @@ export default {
         polyLine
       } = this.drawObj;
       let r = Math.sqrt(Math.pow(x - x1, 2) + Math.pow(y - y1, 2));
-      let nx = r * Math.cos(Math.PI / polyLine);
-      let ny = r * Math.sin(Math.PI / polyLine);
-      console.log(nx, ny);
       let p = "";
-      for (let i = 1; i <= polyLine; i++) {
-        p += parseInt(r * Math.cos(Math.PI / i) + x) + ",";
-        p += parseInt(r * Math.sin(Math.PI / i)) + " ";
+      for (let i = 0; i < polyLine; i++) {
+        let radian = ((2 * Math.PI) / polyLine) * i;
+        let nx = r * Math.sin(radian) + x;
+        let ny = r * -Math.cos(radian) + y;
+        p += parseInt(nx) + ",";
+        p += parseInt(ny) + " ";
       }
-
       return p;
     },
     dragStart(e, type) {

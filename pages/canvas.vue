@@ -137,9 +137,9 @@ export default {
       otherDrawObj: {}, //外界的操作对象
       canvas: {}, //画布
       ctx: {}, //绘图对象
-      path: [],
       drawing: false,
       drawObj: {
+        time: 0,
         fill: false,
         fillColor: "#000",
         pageIndex: 0,
@@ -149,6 +149,7 @@ export default {
         color: "#FF0000",
         lineWidth: 3,
         dashLine: false,
+        path: [],
         position: {
           x: 0,
           y: 0,
@@ -277,7 +278,7 @@ export default {
         let { x, y } = path[0];
         let x1 = path[i].x;
         let y1 = path[i].y;
-        this.onmousemove(x, y, x1, y1, false);
+        this.onmousemove({ x, y, x1, y1 });
         yield i;
       }
     },
@@ -291,6 +292,8 @@ export default {
     },
     reDraw(obj) {
       //根据数据重新绘制图形
+      console.log(obj.path);
+
       this.otherDrawObj = obj;
       this.drawing = true;
       new Promise((resolve, reject) => {
@@ -379,12 +382,9 @@ export default {
       if (sendMsg) {
         Object.assign(this.draw, this.drawObj);
         let diff = {
-          action: "onmousedown",
-          data: {
-            x: x,
-            y: y
-          }
+          action: "onmousedown"
         };
+        this.drawObj.time = this.time;
         Object.assign(diff, this.drawObj);
         this.socket.emit("draw", diff);
       } else {
@@ -399,8 +399,6 @@ export default {
       }
     },
     onmousemove({ x, y, x1, y1, sendMsg }) {
-      console.log(x);
-
       //鼠标或手指移动时的事件
       if (!this.pageArr[this.drawObj.pageIndex]) {
         //如果页面信息数组为空,创建一个页面
@@ -418,7 +416,7 @@ export default {
             y1: y1
           }
         };
-        this.path.push({ x: x1, y: y1 }); //保存用户绘制的路径
+        this.drawObj.path.push({ x: x1, y: y1 }); //保存用户绘制的路径
         this.socket.emit("draw", diff);
       }
     },
@@ -441,6 +439,7 @@ export default {
         };
         this.socket.emit("draw", diff);
       }
+      this.draw.ctxArr.push(this.drawObj);
     }
   }
 };

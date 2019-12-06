@@ -39,7 +39,7 @@ module.exports = {
     '~/assets/iconfont/iconfont.css'
   ],
   server: {
-    port: 81, // default: 3000
+    port: 80, // default: 3000
     host: '0.0.0.0', // default: localhost
   },
   /*

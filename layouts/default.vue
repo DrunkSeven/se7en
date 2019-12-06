@@ -1,14 +1,14 @@
 <template>
   <div id="se7en">
-    <header class="header" :style="{'margin-top':$store.state.showHeader?'':'-70px'}">
+    <!-- <header class="header" :style="{'margin-top':$store.state.showHeader?'':'-70px'}">
       <h1 class="head-title">{{title}}</h1>
       <div style="height:61px" v-show="topFixed"></div>
       <div class="content" :class="{'top-menu-fixed':topFixed}" ref="topMenu">
         <topMenu />
       </div>
-    </header>
+    </header>-->
     <div class="content center-box">
-      <breadcrumb></breadcrumb>
+      <!-- <breadcrumb></breadcrumb> -->
       <nuxt />
     </div>
     <footer class="footer">

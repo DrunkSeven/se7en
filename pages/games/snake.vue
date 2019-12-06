@@ -1,6 +1,6 @@
 <template>
   <div class="snake-page">
-    <h1 class="title">贪吃蛇儿</h1>
+    <h1 class="title">贪吃蛇</h1>
     <div>
       <el-radio-group :disabled="start" size="mini" v-model="difficulty">
         <el-radio-button label="手残"></el-radio-button>
