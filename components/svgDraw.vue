@@ -1,5 +1,17 @@
 <template>
   <div>
+    <!-- <div
+      draggable="true"
+      v-show="shwoDrag"
+      @dragstart="dragStart($event,'move')"
+      @drag="dragEvent($event,'move')"
+      @dragend="dragEnd($event,'move')"
+      @touchstart="dragStart($event,'move')"
+      @touchmove="dragEvent($event,'move')"
+      @touchend="dragEnd($event,'move')"
+      class="ctrl-box"
+      :style="{'width':ctrlBox.w,'height':ctrlBox.h,'left':ctrlBox.x,'top':ctrlBox.y,}"
+    ></div>-->
     <svg
       class="svg"
       ref="svg"
@@ -28,6 +40,7 @@
         :fill="drawObj.fillColor"
         :fill-opacity="drawObj.fill?1:0"
         :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
+        :transform="drawObj.position.angle?`rotate(${drawObj.position.angle},${drawObj.position.x},${drawObj.position.y})`:''"
       />
       <ellipse
         ref="ellipse"
@@ -41,9 +54,10 @@
         :fill="drawObj.fillColor"
         :fill-opacity="drawObj.fill?1:0"
         :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
+        :transform="drawObj.position.angle?`rotate(${drawObj.position.angle},${drawObj.position.x},${drawObj.position.y})`:''"
       />
       <rect
-        v-if="drawObj.type=='rect'"
+        v-if="drawObj.type=='rect'&&drawObj.position.x1-drawObj.position.x>0"
         :x="drawObj.position.x"
         :y="drawObj.position.y"
         :width="drawObj.position.x1-drawObj.position.x"
@@ -53,6 +67,7 @@
         :fill="drawObj.fillColor"
         :fill-opacity="drawObj.fill?1:0"
         :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
+        :transform="drawObj.position.angle?`rotate(${drawObj.position.angle},${drawObj.position.x},${drawObj.position.y})`:''"
       />
     </svg>
     <img
@@ -71,7 +86,7 @@
       :style="{'left':drawObj.position.x-10+'px','top':drawObj.position.y-10+'px'}"
       src="~assets/img/drag.png"
     />
-    <!-- <img
+    <img
       v-show="shwoDrag"
       draggable="true"
       @dragstart="dragStart($event,'rotate')"
@@ -86,7 +101,7 @@
       height="20px"
       :style="{'left':drawObj.position.x1-10+'px','top':drawObj.position.y1-10+'px'}"
       src="~assets/img/rotate.png"
-    />-->
+    />
   </div>
 </template>
 <script>
@@ -95,7 +110,8 @@ export default {
   data() {
     return {
       svg: {},
-      shwoDrag: false
+      shwoDrag: false,
+      ctrlBox: {}
     };
   },
   mounted() {
@@ -154,6 +170,60 @@ export default {
     }
   },
   methods: {
+    setCtrlStyle() {
+      let {
+        position: { x, y, x1, y1 },
+        type
+      } = this.drawObj;
+      let f = "rectline".includes(type);
+      let width = f ? Math.abs(x - x1) + "px" : Math.abs(x - x1) * 2 + "px";
+      let height = f ? Math.abs(y - y1) + "px" : Math.abs(y - y1) * 2 + "px";
+      this.ctrlBox = {
+        w: width,
+        h: height,
+        x: f ? x + "px" : x1 - Math.abs(x - x1) + "px",
+        y: f ? y + "px" : y1 - Math.abs(y - y1) + "px"
+      };
+    },
+    angle(px, py, mx, my) {
+      var x = Math.abs(px - mx);
+      var y = Math.abs(py - my);
+      var z = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+      var cos = y / z;
+      var radina = Math.acos(cos); //用反三角函数求弧度
+      var angle = Math.floor(180 / (Math.PI / radina)); //将弧度转换成角度
+
+      if (mx > px && my > py) {
+        //鼠标在第四象限
+        angle = 180 - angle;
+      }
+
+      if (mx == px && my > py) {
+        //鼠标在y轴负方向上
+        angle = 180;
+      }
+
+      if (mx > px && my == py) {
+        //鼠标在x轴正方向上
+        angle = 90;
+      }
+
+      if (mx < px && my > py) {
+        //鼠标在第三象限
+        angle = 180 + angle;
+      }
+
+      if (mx < px && my == py) {
+        //鼠标在x轴负方向
+        angle = 270;
+      }
+
+      if (mx < px && my < py) {
+        //鼠标在第二象限
+        angle = 360 - angle;
+      }
+      return angle;
+    },
     setPoly() {
       let {
         position: { x, y, x1, y1 },
@@ -187,7 +257,7 @@ export default {
         if (this.drawObj.type == "line") {
           this.onmousemove(x, y, mx, my);
         } else {
-          this.drawObj.position.angle = Math.sqrt(mx * mx + my * my);
+          this.drawObj.position.angle = this.angle(x, y, mx, my);
         }
       }
     },
@@ -205,7 +275,7 @@ export default {
         if (this.drawObj.type == "line") {
           this.onmousemove(x, y, mx, my);
         } else {
-          this.drawObj.position.angle = Math.sqrt(mx * mx + my * my);
+          this.drawObj.position.angle = this.angle(x, y, mx, my);
         }
       }
       this.onmouseup();
@@ -225,6 +295,7 @@ export default {
     onmouseup() {
       this.svg.onmousemove = null;
       document.onmouseup = null;
+      this.setCtrlStyle();
     }
   }
 };
@@ -233,6 +304,10 @@ export default {
 .svg {
   width: 100%;
   height: 100%;
+}
+.ctrl-box {
+  position: absolute;
+  border: 1px solid #ccc;
 }
 .drag {
   position: absolute;

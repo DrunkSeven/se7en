@@ -9,6 +9,7 @@ export default class Draw {
   _polyLine;
   _dashLine;
   _ctxArr;
+  _position;
   constructor(ctx, type) {
     this.type = type || 'stroke'
     this.ctx = ctx;
@@ -77,12 +78,7 @@ export default class Draw {
     this.init();
     this.ctx.beginPath();
     this.ctx.rect(x, y, x1 - x, y1 - y);
-    if (this._fill) {
-      this.ctx.fill();
-      this.ctx.stroke();
-    } else {
-      this.ctx.stroke();
-    }
+    this.drawEnd(x, y)
   }
   line(x, y, x1, y1) {
     this.init();
@@ -96,23 +92,13 @@ export default class Draw {
     let r = Math.sqrt(Math.pow(x - x1, 2) + Math.pow(y - y1, 2));
     this.ctx.beginPath();
     this.ctx.arc(x, y, r, 0, 2 * Math.PI);
-    if (this._fill) {
-      this.ctx.fill();
-      this.ctx.stroke();
-    } else {
-      this.ctx.stroke();
-    }
+    this.drawEnd(x, y)
   }
   ellipse(x, y, x1, y1) {
     this.init();
     this.ctx.beginPath();
     this.ctx.ellipse(x, y, Math.abs(x - x1), Math.abs(y - y1), 0, 0, 2 * Math.PI);
-    if (this._fill) {
-      this.ctx.fill();
-      this.ctx.stroke();
-    } else {
-      this.ctx.stroke();
-    }
+    this.drawEnd(x, y)
   }
   /**
    *
@@ -144,12 +130,7 @@ export default class Draw {
       ctx.lineTo(nx1, ny1);
     }
     ctx.closePath();     //闭合路径否则首位衔接处会怪怪的
-    if (this._fill) {
-      this.ctx.fill();
-      this.ctx.stroke();
-    } else {
-      this.ctx.stroke();
-    }
+    this.drawEnd(x, y)
     //
     ctx.restore();
   }
@@ -170,8 +151,17 @@ export default class Draw {
     this.ctx.lineCap = "round";
     this.ctx.clearRect(x1 - width / 2, y1 - width / 2, width, width);
   }
-  getShape(drawInfo) {
-    // console.log(drawInfo);
+  drawEnd(x, y) {
+    if (this._fill) {
+      this.ctx.fill();
+      this.ctx.stroke();
+    } else {
+      this.ctx.stroke();
+    }
+    console.log(x, y);
+
+    this.ctx.translate(x, y);
+    // this.ctx.rotate();
 
   }
   cut(x, y, x1, y1) {
