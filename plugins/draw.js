@@ -73,12 +73,16 @@ export default class Draw {
     } else {
       this.ctx.setLineDash([0]);
     }
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
-  rect(x, y, x1, y1) {
+  rect(x, y, x1, y1, angle) {
     this.init();
     this.ctx.beginPath();
+    this.edit(x, y, x1, y1, angle)
+    // this.ctx.translate(x, y);
+    // this.ctx.rotate(45 * Math.PI / 180);
     this.ctx.rect(x, y, x1 - x, y1 - y);
-    this.drawEnd(x, y)
+    this.drawEnd(x, y, x1, y1)
   }
   line(x, y, x1, y1) {
     this.init();
@@ -92,13 +96,14 @@ export default class Draw {
     let r = Math.sqrt(Math.pow(x - x1, 2) + Math.pow(y - y1, 2));
     this.ctx.beginPath();
     this.ctx.arc(x, y, r, 0, 2 * Math.PI);
-    this.drawEnd(x, y)
+    this.drawEnd(x, y, x1, y1)
   }
-  ellipse(x, y, x1, y1) {
+  ellipse(x, y, x1, y1, angle) {
     this.init();
     this.ctx.beginPath();
+    this.edit(x, y, x1, y1, angle)
     this.ctx.ellipse(x, y, Math.abs(x - x1), Math.abs(y - y1), 0, 0, 2 * Math.PI);
-    this.drawEnd(x, y)
+    this.drawEnd(x, y, x1, y1)
   }
   /**
    *
@@ -108,31 +113,31 @@ export default class Draw {
    * @param y1
    * @param n
    */
-  poly(x, y, x1, y1) {
+  poly(x, y, x1, y1, angle) {
     let n = this._polyLine;
     this.init();
     let ctx = this.ctx;
     let r = Math.sqrt(Math.pow(x - x1, 2) + Math.pow(y - y1, 2));;
     ctx.save();
-    // ctx.translate(x, y);
-    // ctx.rotate(Math.PI / 2);
     ctx.beginPath();
-
+    this.edit(x, y, x1, y1, angle)
     for (let i = 0; i <= n; i++) {
-      // ctx.rotate(Math.PI * 2 / n);
       let radian = ((2 * Math.PI) / this.polyLine) * i;
       let radian1 = ((2 * Math.PI) / this.polyLine) * (i + 1);
       let nx = r * Math.sin(radian) + x;
       let ny = r * -Math.cos(radian) + y;
       let nx1 = r * Math.sin(radian1) + x;
-      let ny1 = r * -Math.cos(radian1) + y;
-      ctx.moveTo(nx, ny);
+      let ny1 = r * Math.cos(radian1) + y;
       ctx.lineTo(nx1, ny1);
     }
     ctx.closePath();     //闭合路径否则首位衔接处会怪怪的
-    this.drawEnd(x, y)
-    //
     ctx.restore();
+    if (this._fill) {
+      this.ctx.fill();
+      this.ctx.stroke();
+    } else {
+      this.ctx.stroke();
+    }
   }
   pen(x, y, x1, y1) {
     this.init();
@@ -149,20 +154,26 @@ export default class Draw {
       width = this._lineWidth * 2
     }
     this.ctx.lineCap = "round";
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.clearRect(x1 - width / 2, y1 - width / 2, width, width);
   }
-  drawEnd(x, y) {
+  drawEnd(x, y, x1, y1) {
     if (this._fill) {
       this.ctx.fill();
       this.ctx.stroke();
     } else {
       this.ctx.stroke();
     }
-    console.log(x, y);
-
-    this.ctx.translate(x, y);
-    // this.ctx.rotate();
-
+  }
+  edit(x, y, x1, y1, angle) {
+    if (this.type == "rect") {
+      x = x + Math.abs(x1 - x) / 2;
+      y = y + Math.abs(y1 - y) / 2;
+    }
+    let deg = Math.PI / 180
+    let cosNum = Math.cos(deg * angle);
+    let sinNum = Math.sin(deg * angle)
+    this.ctx.setTransform(cosNum, sinNum, -sinNum, cosNum, x - x * cosNum + y * sinNum, y - x * sinNum - y * cosNum);
   }
   cut(x, y, x1, y1) {
     this.init();

@@ -17,7 +17,7 @@
         @onmouseup="onmouseup"
         @onmousemove="onmousemove"
         @onmousedown="onmousedown"
-        v-show="shwoSvg"
+        @drawCanvas="drawCanvas"
       />
     </div>
     <div id="ctrl-box">
@@ -37,14 +37,7 @@
             size="mini"
             :type="drawObj.type=='poly'?'primary':''"
           >正多边形</el-button>
-          <el-input-number
-            size="mini"
-            type="number"
-            v-model="drawObj.polyLine"
-            value="3"
-            :max="9"
-            :min="3"
-          />
+          <el-input-number size="mini" type="number" v-model="drawObj.polyLine" :max="9" :min="3" />
         </div>
         <!-- <el-button size="mini" @click="selectUtil('cut')">剪切</el-button>
         <el-button size="mini" @click="selectUtil('cancel')">撤销</el-button>-->
@@ -128,7 +121,6 @@ export default {
       ],
       color: ["#000000", "#FFFFFF", "#FF0000", "#0000FF", "#FFFF00", "#9AFF02"],
       socket: {},
-      shwoSvg: true,
       drag: {},
       isPlayback: false,
       ctxArrIndex: 0, //回放时记录ctxArr位置的指针
@@ -229,17 +221,19 @@ export default {
     );
     this.socket.on("draw", diff => {
       //接收socket消息
+      console.log(diff);
+
       let {
         action,
-        data: { x, y, x1, y1 }
+        position: { x, y, x1, y1 }
       } = diff;
       this.otherDrawObj = diff;
       switch (action) {
         case "onmousedown":
-          this.onmousedown(x, y);
+          this.onmousedown({ x, y });
           break;
         case "onmousemove":
-          this.onmousemove(x, y, x1, y1);
+          this.onmousemove({ x, y, x1, y1 });
           break;
         case "onmouseup":
           this.onmouseup();
@@ -292,7 +286,6 @@ export default {
     },
     reDraw(obj) {
       //根据数据重新绘制图形
-      console.log(obj.path);
 
       this.otherDrawObj = obj;
       this.drawing = true;
@@ -359,10 +352,6 @@ export default {
         this.drawCanvas();
         this.drawObj.position = {};
         this.drawObj.type = type;
-        // this.svgDraw=true;
-        // if(type=="pen"||type=="eraser"){
-        //   this.svgDraw=false;
-        // }
       }
     },
     selectColor(color) {
@@ -370,10 +359,10 @@ export default {
       this.drawObj.color = color;
     },
     drawCanvas() {
-      let { x, y, x1, y1 } = this.drawObj.position;
+      let { x, y, x1, y1, angle } = this.drawObj.position;
       if (x || y || x1 || y1) {
         Object.assign(this.draw, this.drawObj);
-        this.draw[this.draw.type](x, y, x1, y1);
+        this.draw[this.draw.type](x, y, x1, y1, angle || 0);
         this.shwoDrag = false;
       }
     },
@@ -405,22 +394,19 @@ export default {
         this.pageArr[this.drawObj.pageIndex] = [];
       }
       let arr = this.pageArr[this.drawObj.pageIndex];
-      this.draw[this.draw.type](x, y, x1, y1);
+      if ("peneraser".includes(this.draw.type))
+        this.draw[this.draw.type](x, y, x1, y1);
       if (sendMsg) {
         let diff = {
-          action: "onmousemove",
-          data: {
-            x: x,
-            y: y,
-            x1: x1,
-            y1: y1
-          }
+          action: "onmousemove"
         };
+        Object.assign(diff, this.drawObj);
         this.drawObj.path.push({ x: x1, y: y1 }); //保存用户绘制的路径
         this.socket.emit("draw", diff);
       }
     },
     onmouseup(sendMsg) {
+      this.shwoDrag = true;
       if (!this.pageArr[this.drawObj.pageIndex]) {
         //如果页面信息数组为空,创建一个页面
         this.pageArr[this.drawObj.pageIndex] = [];
@@ -434,9 +420,9 @@ export default {
       );
       if (sendMsg) {
         let diff = {
-          action: "onmouseup",
-          data: {}
+          action: "onmouseup"
         };
+        Object.assign(diff, this.drawObj);
         this.socket.emit("draw", diff);
       }
       this.draw.ctxArr.push(this.drawObj);

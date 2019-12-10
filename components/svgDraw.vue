@@ -1,17 +1,5 @@
 <template>
   <div>
-    <!-- <div
-      draggable="true"
-      v-show="shwoDrag"
-      @dragstart="dragStart($event,'move')"
-      @drag="dragEvent($event,'move')"
-      @dragend="dragEnd($event,'move')"
-      @touchstart="dragStart($event,'move')"
-      @touchmove="dragEvent($event,'move')"
-      @touchend="dragEnd($event,'move')"
-      class="ctrl-box"
-      :style="{'width':ctrlBox.w,'height':ctrlBox.h,'left':ctrlBox.x,'top':ctrlBox.y,}"
-    ></div>-->
     <svg
       class="svg"
       ref="svg"
@@ -40,13 +28,11 @@
         :fill="drawObj.fillColor"
         :fill-opacity="drawObj.fill?1:0"
         :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
-        :transform="drawObj.position.angle?`rotate(${drawObj.position.angle},${drawObj.position.x},${drawObj.position.y})`:''"
+        :transform="`matrix(${setMatrix()})`"
       />
       <ellipse
         ref="ellipse"
         v-if="drawObj.type=='ellipse'"
-        :cx="drawObj.position.x||0"
-        :cy="drawObj.position.y||0"
         :rx="Math.abs(drawObj.position.x-drawObj.position.x1)||0"
         :ry="Math.abs(drawObj.position.y-drawObj.position.y1)||0"
         :stroke="drawObj.color"
@@ -54,12 +40,10 @@
         :fill="drawObj.fillColor"
         :fill-opacity="drawObj.fill?1:0"
         :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
-        :transform="drawObj.position.angle?`rotate(${drawObj.position.angle},${drawObj.position.x},${drawObj.position.y})`:''"
+        :transform="`matrix(${setMatrix()})`"
       />
       <rect
         v-if="drawObj.type=='rect'&&drawObj.position.x1-drawObj.position.x>0"
-        :x="drawObj.position.x"
-        :y="drawObj.position.y"
         :width="drawObj.position.x1-drawObj.position.x"
         :height="drawObj.position.y1-drawObj.position.y"
         :stroke="drawObj.color"
@@ -67,7 +51,7 @@
         :fill="drawObj.fillColor"
         :fill-opacity="drawObj.fill?1:0"
         :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
-        :transform="drawObj.position.angle?`rotate(${drawObj.position.angle},${drawObj.position.x},${drawObj.position.y})`:''"
+        :transform="`matrix(${setMatrix()})`"
       />
     </svg>
     <img
@@ -87,7 +71,7 @@
       src="~assets/img/drag.png"
     />
     <img
-      v-show="shwoDrag"
+      v-show="shwoDrag&&drawObj.type!='rect'"
       draggable="true"
       @dragstart="dragStart($event,'rotate')"
       @drag="dragEvent($event,'rotate')"
@@ -106,12 +90,13 @@
 </template>
 <script>
 export default {
-  props: ["drawObj"],
+  props: ["drawObj", ""],
   data() {
     return {
       svg: {},
+      ctrlBox: {},
       shwoDrag: false,
-      ctrlBox: {}
+      matrixArr: [1, 0, 0, 1, 0, 0]
     };
   },
   mounted() {
@@ -142,16 +127,17 @@ export default {
       this.svg.onmousedown = e => {
         let x = e.offsetX;
         let y = e.offsetY;
-        this.shwoDrag = false;
+        let x1 = x;
+        let y1 = y;
         this.$emit("onmousedown", { x, y, sendMsg: true });
+        this.shwoDrag = false;
         this.svg.onmousemove = e => {
-          let x1 = e.offsetX;
-          let y1 = e.offsetY;
+          x1 = e.offsetX;
+          y1 = e.offsetY;
           if (this.drawObj.type != "pen" && this.drawObj.type != "eraser") {
             this.onmousemove(x, y, x1, y1, true);
-          } else {
-            this.$emit("onmousemove", { x, y, x1, y1, sendMsg: true });
           }
+          this.$emit("onmousemove", { x, y, x1, y1, sendMsg: true });
         };
         document.onmouseup = e => {
           this.onmouseup(true);
@@ -160,16 +146,37 @@ export default {
             this.drawObj.type != "eraser" &&
             this.drawObj.type != "cancel"
           ) {
-            this.shwoDrag = true;
-          } else {
-            this.shwoDrag = false;
+            this.$emit("onmouseup");
+            if (Math.abs(x1 - x) || Math.abs(y1 - y)) {
+              this.shwoDrag = true;
+            }
           }
-          this.$emit("onmouseup");
         };
       };
     }
   },
   methods: {
+    setMatrix() {
+      let {
+        position: { x, y, x1, y1, angle = 0 },
+        type
+      } = this.drawObj;
+      if (type == "rect" && angle) {
+        x = x + Math.abs(x1 - x) / 2;
+        y = y + Math.abs(y1 - y) / 2;
+      }
+      let deg = Math.PI / 180;
+      let cosNum = Math.cos(deg * angle);
+      let sinNum = Math.sin(deg * angle);
+      return `
+          ${cosNum},
+          ${sinNum},
+          ${-sinNum},
+          ${cosNum},
+          ${x},
+          ${y}
+        `;
+    },
     setCtrlStyle() {
       let {
         position: { x, y, x1, y1 },
@@ -195,32 +202,21 @@ export default {
 
       if (mx > px && my > py) {
         //鼠标在第四象限
-        angle = 180 - angle;
-      }
-
-      if (mx == px && my > py) {
-        //鼠标在y轴负方向上
-        angle = 180;
-      }
-
-      if (mx > px && my == py) {
-        //鼠标在x轴正方向上
-        angle = 90;
+        angle = 90 - angle;
       }
 
       if (mx < px && my > py) {
         //鼠标在第三象限
-        angle = 180 + angle;
-      }
-
-      if (mx < px && my == py) {
-        //鼠标在x轴负方向
-        angle = 270;
+        angle = 90 + angle;
       }
 
       if (mx < px && my < py) {
         //鼠标在第二象限
-        angle = 360 - angle;
+        angle = 270 - angle;
+      }
+      if (mx > px && my < py) {
+        //鼠标在第一象限
+        angle = 270 + angle;
       }
       return angle;
     },
@@ -233,8 +229,8 @@ export default {
       let p = "";
       for (let i = 0; i < polyLine; i++) {
         let radian = ((2 * Math.PI) / polyLine) * i;
-        let nx = r * Math.sin(radian) + x;
-        let ny = r * -Math.cos(radian) + y;
+        let nx = r * Math.sin(radian);
+        let ny = r * Math.cos(radian);
         p += parseInt(nx) + ",";
         p += parseInt(ny) + " ";
       }
