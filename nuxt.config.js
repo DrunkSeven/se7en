@@ -21,10 +21,10 @@ module.exports = {
   },
   env: {
     title: "幻化成扇子的小窝",
-    // baseUrl: 'http://api.se7en.com:7001',
+    baseUrl: 'http://se7en.iego.net/api',
     HOST: pkg.config.nuxt.host,
     PORT: pkg.config.nuxt.port,
-    baseUrl: 'https://120.79.88.200:7001/',
+    // baseUrl: 'https://120.79.88.200:7001/',
   },
   /*
   ** Customize the progress-bar color
