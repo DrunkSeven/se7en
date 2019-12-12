@@ -60,9 +60,11 @@
           :transform="`matrix(${setMatrix()})`"
         />
         <rect
-          v-if="drawObj.type=='rect'&&drawObj.position.x1-drawObj.position.x>0"
-          :width="drawObj.position.x1-drawObj.position.x"
-          :height="drawObj.position.y1-drawObj.position.y"
+          :x="drawObj.position.angle?-Math.abs(drawObj.position.x1-drawObj.position.x) / 2:0"
+          :y="drawObj.position.angle?-Math.abs(drawObj.position.y1-drawObj.position.y) / 2:0"
+          v-if="drawObj.type=='rect'"
+          :width="Math.abs(drawObj.position.x1-drawObj.position.x)||0"
+          :height="Math.abs(drawObj.position.y1-drawObj.position.y)||0"
           :stroke="drawObj.color"
           :stroke-width="drawObj.lineWidth"
           :fill="drawObj.fillColor"
@@ -88,7 +90,7 @@
         src="~assets/img/drag.png"
       />
       <img
-        v-show="shwoDrag&&drawObj.type!='rect'"
+        v-show="shwoDrag"
         draggable="true"
         @dragstart="dragstart($event,'rotate')"
         @drag="draging($event,'rotate')"
@@ -104,7 +106,6 @@
         src="~assets/img/rotate.png"
       />
     </div>
-
     <drawUtil :drawObj="drawObj" @selectUtil="selectUtil" />
   </section>
 </template>
@@ -168,15 +169,17 @@ export default {
       let y = e.offsetY;
       let x1 = x;
       let y1 = y;
-      // this.drawObj.position = {
-      //   x: x || 0,
-      //   y: y || 0,
-      //   x1: x1 || 0,
-      //   y1: y1 || 0,
-      //   angle: 0
-      // };
+      if (!"peneraser".includes(this.drawObj.type)) {
+        this.$refs.cv.drawCanvas();
+      }
+      this.drawObj.position = {
+        x: x || 0,
+        y: y || 0,
+        x1: x1 || 0,
+        y1: y1 || 0,
+        angle: 0
+      };
       this.sendMsg("onmousedown");
-      this.$refs.cv.drawCanvas();
       this.$refs.cv.onmousedown(x, y);
       this.shwoDrag = false;
       this.svg.onmousemove = e => {
@@ -199,19 +202,28 @@ export default {
       //接收socket消息
       let action = diff.action;
       this.drawObj = diff;
+      let { x, y, x1, y1 } = this.drawObj.position;
       if (action == "onmouseup") {
         this.onmouseup();
       } else if (action == "onmousemove") {
-        this.onmousemove();
+        this.onmousemove(x, y, x1, y1);
       } else if (action == "onmousedown") {
         this.$refs.cv.drawCanvas();
+        this.$refs.cv.onmousedown(x, y);
       }
     });
   },
   methods: {
+    changeUtil() {
+      if (this.drawObj.type != "cancel") {
+        this.$refs.cv.drawCanvas();
+        this.drawObj.position = {};
+      }
+    },
     //发送socket消息
     sendMsg(action) {
       this.drawObj.action = action;
+      console.log(this.drawObj);
       this.socket.emit("draw", this.drawObj);
     },
     selectUtil(type) {
@@ -242,12 +254,14 @@ export default {
 
     setMatrix() {
       let {
-        position: { x, y, x1, y1, angle = 0 },
+        position: { x = 0, y = 0, x1 = 0, y1 = 0, angle = 0 },
         type
       } = this.drawObj;
+      let cx = x,
+        cy = y;
       if (type == "rect" && angle) {
-        x = x + Math.abs(x1 - x) / 2;
-        y = y + Math.abs(y1 - y) / 2;
+        cx = x + Math.abs(x1 - x) / 2;
+        cy = y + Math.abs(y1 - y) / 2;
       }
       let deg = Math.PI / 180;
       let cosNum = Math.cos(deg * angle);
@@ -257,8 +271,8 @@ export default {
           ${sinNum},
           ${-sinNum},
           ${cosNum},
-          ${x},
-          ${y}
+          ${cx},
+          ${cy}
         `;
     },
     angle(px, py, mx, my) {
@@ -271,6 +285,18 @@ export default {
       if (mx > px && my > py) {
         //鼠标在第四象限
         angle = 90 - angle;
+      }
+      if (mx == px && my > py) {
+        //鼠标在y轴负方向上
+        angle = 90;
+      }
+      if (mx < px && my == py) {
+        //鼠标在x轴正方向上
+        angle = 270;
+      }
+      if (mx < px && my == py) {
+        //鼠标在x轴正方向上
+        angle = 180;
       }
       if (mx < px && my > py) {
         //鼠标在第三象限
@@ -291,14 +317,16 @@ export default {
         position: { x, y, x1, y1 },
         polyLine
       } = this.drawObj;
-      let r = Math.sqrt(Math.pow(x - x1, 2) + Math.pow(y - y1, 2));
       let p = "";
-      for (let i = 0; i < polyLine; i++) {
-        let radian = ((2 * Math.PI) / polyLine) * i;
-        let nx = r * Math.sin(radian);
-        let ny = r * Math.cos(radian);
-        p += parseInt(nx) + ",";
-        p += parseInt(ny) + " ";
+      if (x || y || x1 || y1) {
+        let r = Math.sqrt(Math.pow(x - x1, 2) + Math.pow(y - y1, 2));
+        for (let i = 0; i < polyLine; i++) {
+          let radian = ((2 * Math.PI) / polyLine) * i;
+          let nx = r * Math.sin(radian);
+          let ny = r * Math.cos(radian);
+          p += nx + ",";
+          p += ny + " ";
+        }
       }
       return p;
     },
@@ -350,10 +378,10 @@ export default {
         y: y || 0,
         x1: x1 || 0,
         y1: y1 || 0,
-        angle: 0
+        angle: this.drawObj.position.angle
       };
       if ("peneraser".includes(this.drawObj.type)) {
-        this.$refs.cv.onmousemove();
+        this.$refs.cv.drawCanvas();
       }
     },
     onmouseup() {

@@ -32,9 +32,16 @@
       ></el-switch>
       <div class="line-width-box">
         <span class="label">粗细:</span>
-        <el-slider class="line-width" v-model="drawObj.lineWidth" :max="20" :min="1"></el-slider>
+        <span
+          v-for="i in 3"
+          :key="i"
+          class="line-width"
+          :class="{'line-width-active':drawObj.lineWidth==i*3}"
+          :style="{'width':i*4+'px','height':i*4+'px','background':drawObj.color}"
+          @click="drawObj.lineWidth=i*3"
+        ></span>
+        <!-- <el-slider class="line-width" v-model="drawObj.lineWidth" :max="20" :min="1"></el-slider> -->
       </div>
-      <!-- <input type="range" min="1" max="20" value="1" /> -->
       <div class="select-color-box">
         <span class="label">颜色:</span>
         <span ref="selectColor" class="color" :style="{'background': drawObj.color}"></span>
@@ -126,7 +133,13 @@ export default {
   margin: 0 20px;
 }
 .line-width {
-  min-width: 100px;
+  border-radius: 100px;
+  border: 2px solid #000;
+  margin-right: 5px;
+  cursor: pointer;
+}
+.line-width-active {
+  border: 3px solid #409eff;
 }
 .util-box {
   .color {

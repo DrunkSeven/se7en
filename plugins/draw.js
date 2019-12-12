@@ -122,10 +122,7 @@ export default class Draw {
     ctx.beginPath();
     this.edit(x, y, x1, y1, angle)
     for (let i = 0; i <= n; i++) {
-      let radian = ((2 * Math.PI) / this.polyLine) * i;
       let radian1 = ((2 * Math.PI) / this.polyLine) * (i + 1);
-      let nx = r * Math.sin(radian) + x;
-      let ny = r * -Math.cos(radian) + y;
       let nx1 = r * Math.sin(radian1) + x;
       let ny1 = r * Math.cos(radian1) + y;
       ctx.lineTo(nx1, ny1);

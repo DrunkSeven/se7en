@@ -79,13 +79,7 @@ export default {
         this.ctx.moveTo(x, y);
       }
     },
-    onmousemove() {
-      //鼠标或手指移动时的事件
-      if ("peneraser".includes(this.draw.type)) this.drawCanvas();
-    },
     onmouseup() {
-      this.canvas.onmousemove = null;
-      document.onmouseup = null;
       this.ctx.save();
     }
   }
