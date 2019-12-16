@@ -1,5 +1,5 @@
 <template>
-  <div id="ctrl-box">
+  <div>
     <div class="util-box">
       <span class="label">工具:</span>
       <el-button
@@ -76,11 +76,11 @@
       ></span>
     </div>
     <div class="control-box">
-      <el-button @click="setPage('prePage')">上一张</el-button>
+      <!-- <el-button @click="setPage('prePage')">上一张</el-button> -->
       <!-- <button id="preAnim">上一个动画</button>
         <button>重置</button>
       <button id="nextAnim">下一个动画</button>-->
-      <el-button @click="setPage('nextPage')">下一张</el-button>
+      <!-- <el-button @click="setPage('nextPage')">下一张</el-button> -->
       <!-- <el-button @click="playback()">重绘</el-button> -->
     </div>
   </div>
@@ -108,10 +108,6 @@ export default {
 };
 </script>
 <style lang="less" scoped>
-#ctrl-box {
-  z-index: 1;
-}
-
 .select-color-box {
   display: flex;
   align-items: center;

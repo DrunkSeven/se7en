@@ -1,112 +1,116 @@
 <template>
-  <section class="canvas-body" onkeydown="onkeydown($event)">
-    <!-- <div>{{time}}</div> -->
-    <div id="whiteboard">
-      <!-- <iframe
+  <section>
+    <div class="canvas-content">
+      <!-- <div>{{time}}</div> -->
+      <div ref="whiteboard" id="whiteboard">
+        <!-- <iframe
         id="ppt"
         src="http://vip.ow365.cn/?i=34&n=5&furl=http%3A%2F%2Fofficeweb365.com%2Fviewfile%2F%E6%B7%B1%E5%85%A5%E6%B5%85%E5%87%BAHTML5%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91.pptx&p=1"
         width="1186px"
         height="691px"
         frameborder="0"
-      ></iframe>-->
-      <!-- <iframe
-        id="ppt"
-        frameborder="0"
-        src="https://view.officeapps.live.com/op/embed.aspx?src=http%3A%2F%2Fvideo%2Ech9%2Ems%3A80%2Fbuild%2F2011%2Fslides%2FTOOL%2D532T%5FSutter%2Epptx&amp;wdAr=1.7777777777777777"
-        width="962px"
-        height="565px"
-      ></iframe>-->
-      <canvasDraw :drawObj="drawObj" ref="cv" />
-      <svg
-        class="svg"
-        ref="svg"
-        xmlns="http://www.w3.org/2000/svg"
-        style="top:0"
-        width="640"
-        height="480"
-      >
-        <line
-          v-if="drawObj.type=='line'"
-          :x1="drawObj.position.x||0"
-          :y1="drawObj.position.y||0"
-          :x2="drawObj.position.x1||0"
-          :y2="drawObj.position.y1||0"
-          :stroke="drawObj.color"
-          :stroke-width="drawObj.lineWidth"
-          :fill="drawObj.fillColor"
-          :fill-opacity="drawObj.fill?1:0"
-          :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
+        ></iframe>-->
+        <iframe id="ppt" frameborder="0" src="/ppt/ppt.html" width="962px" height="565px"></iframe>
+        <canvasDraw
+          id="canvas"
+          :drawObj="drawObj"
+          ref="cv"
+          :windowSize="windowSize"
+          :scale="scale"
         />
-        <polygon
-          v-if="drawObj.type=='poly'"
-          :points="setPoly()"
-          :stroke="drawObj.color"
-          :stroke-width="drawObj.lineWidth"
-          :fill="drawObj.fillColor"
-          :fill-opacity="drawObj.fill?1:0"
-          :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
-          :transform="`matrix(${setMatrix()})`"
+        <!-- <svg
+          class="svg"
+          ref="svg"
+          xmlns="http://www.w3.org/2000/svg"
+          style="top:0"
+          :width="windowSize[0]"
+          :height="windowSize[1]"
+        >
+          <line
+            v-if="drawObj.type=='line'"
+            :x1="drawObj.position.x||0"
+            :y1="drawObj.position.y||0"
+            :x2="drawObj.position.x1||0"
+            :y2="drawObj.position.y1||0"
+            :stroke="drawObj.color"
+            :stroke-width="drawObj.lineWidth"
+            :fill="drawObj.fillColor"
+            :fill-opacity="drawObj.fill?1:0"
+            :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
+          />
+          <polygon
+            v-if="drawObj.type=='poly'"
+            :points="setPoly()"
+            :stroke="drawObj.color"
+            :stroke-width="drawObj.lineWidth"
+            :fill="drawObj.fillColor"
+            :fill-opacity="drawObj.fill?1:0"
+            :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
+            :transform="`matrix(${setMatrix()})`"
+          />
+          <ellipse
+            ref="ellipse"
+            v-if="drawObj.type=='ellipse'"
+            :rx="Math.abs(drawObj.position.x-drawObj.position.x1)||0"
+            :ry="Math.abs(drawObj.position.y-drawObj.position.y1)||0"
+            :stroke="drawObj.color"
+            :stroke-width="drawObj.lineWidth"
+            :fill="drawObj.fillColor"
+            :fill-opacity="drawObj.fill?1:0"
+            :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
+            :transform="`matrix(${setMatrix()})`"
+          />
+          <rect
+            :x="drawObj.position.angle?-Math.abs(drawObj.position.x1-drawObj.position.x) / 2:0"
+            :y="drawObj.position.angle?-Math.abs(drawObj.position.y1-drawObj.position.y) / 2:0"
+            v-if="drawObj.type=='rect'"
+            :width="Math.abs(drawObj.position.x1-drawObj.position.x)||0"
+            :height="Math.abs(drawObj.position.y1-drawObj.position.y)||0"
+            :stroke="drawObj.color"
+            :stroke-width="drawObj.lineWidth"
+            :fill="drawObj.fillColor"
+            :fill-opacity="drawObj.fill?1:0"
+            :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
+            :transform="`matrix(${setMatrix()})`"
+          />
+        </svg>-->
+        <img
+          v-show="shwoDrag"
+          draggable="true"
+          @dragstart="dragstart($event,'move')"
+          @drag="draging($event,'move')"
+          @dragend="dragend($event,'move')"
+          @touchstart="dragstart($event,'move')"
+          @touchmove="draging($event,'move')"
+          @touchend="dragend($event,'move')"
+          id="drag"
+          class="drag"
+          width="20px"
+          height="20px"
+          :style="{'left':drawObj.position.x-10+'px','top':drawObj.position.y-10+'px'}"
+          src="~assets/img/drag.png"
         />
-        <ellipse
-          ref="ellipse"
-          v-if="drawObj.type=='ellipse'"
-          :rx="Math.abs(drawObj.position.x-drawObj.position.x1)||0"
-          :ry="Math.abs(drawObj.position.y-drawObj.position.y1)||0"
-          :stroke="drawObj.color"
-          :stroke-width="drawObj.lineWidth"
-          :fill="drawObj.fillColor"
-          :fill-opacity="drawObj.fill?1:0"
-          :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
-          :transform="`matrix(${setMatrix()})`"
+        <img
+          v-show="shwoDrag"
+          draggable="true"
+          @dragstart="dragstart($event,'rotate')"
+          @drag="draging($event,'rotate')"
+          @dragend="dragend($event,'rotate')"
+          @touchstart="dragstart($event,'rotate')"
+          @touchmove="draging($event,'rotate')"
+          @touchend="dragend($event,'rotate')"
+          id="drag"
+          class="drag"
+          width="20px"
+          height="20px"
+          :style="{'left':drawObj.position.x1-10+'px','top':drawObj.position.y1-10+'px'}"
+          src="~assets/img/rotate.png"
         />
-        <rect
-          :x="drawObj.position.angle?-Math.abs(drawObj.position.x1-drawObj.position.x) / 2:0"
-          :y="drawObj.position.angle?-Math.abs(drawObj.position.y1-drawObj.position.y) / 2:0"
-          v-if="drawObj.type=='rect'"
-          :width="Math.abs(drawObj.position.x1-drawObj.position.x)||0"
-          :height="Math.abs(drawObj.position.y1-drawObj.position.y)||0"
-          :stroke="drawObj.color"
-          :stroke-width="drawObj.lineWidth"
-          :fill="drawObj.fillColor"
-          :fill-opacity="drawObj.fill?1:0"
-          :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
-          :transform="`matrix(${setMatrix()})`"
-        />
-      </svg>
-      <img
-        v-show="shwoDrag"
-        draggable="true"
-        @dragstart="dragstart($event,'move')"
-        @drag="draging($event,'move')"
-        @dragend="dragend($event,'move')"
-        @touchstart="dragstart($event,'move')"
-        @touchmove="draging($event,'move')"
-        @touchend="dragend($event,'move')"
-        id="drag"
-        class="drag"
-        width="20px"
-        height="20px"
-        :style="{'left':drawObj.position.x-10+'px','top':drawObj.position.y-10+'px'}"
-        src="~assets/img/drag.png"
-      />
-      <img
-        v-show="shwoDrag"
-        draggable="true"
-        @dragstart="dragstart($event,'rotate')"
-        @drag="draging($event,'rotate')"
-        @dragend="dragend($event,'rotate')"
-        @touchstart="dragstart($event,'rotate')"
-        @touchmove="draging($event,'rotate')"
-        @touchend="dragend($event,'rotate')"
-        id="drag"
-        class="drag"
-        width="20px"
-        height="20px"
-        :style="{'left':drawObj.position.x1-10+'px','top':drawObj.position.y1-10+'px'}"
-        src="~assets/img/rotate.png"
-      />
+      </div>
+
+      <div class="right-box"></div>
     </div>
-    <drawUtil :drawObj="drawObj" @selectUtil="selectUtil" />
+    <drawUtil class="draw-util" :drawObj="drawObj" @selectUtil="selectUtil" />
   </section>
 </template>
 <script>
@@ -133,6 +137,8 @@ export default {
       isPlayback: false,
       ctxArrIndex: 0, //回放时记录ctxArr位置的指针
       pageArr: {}, //页面画布数组对象
+      windowSize: [640, 480],
+      scale: 1,
       drawObj: {
         action: "",
         time: 0,
@@ -158,46 +164,59 @@ export default {
   },
 
   mounted() {
+    setTimeout(() => {
+      this.windowSize = [
+        this.$refs.whiteboard.offsetWidth,
+        this.$refs.whiteboard.offsetHeight
+      ];
+    }, 100);
+    window.addEventListener("resize", () => {
+      this.windowSize = [
+        this.$refs.whiteboard.offsetWidth,
+        this.$refs.whiteboard.offsetHeight
+      ];
+    });
     this.socket = io("http://127.0.0.1:8080", { reconnection: false }); //创建socket连接
     let teacher = this.$route.query.teacher; //是否是老是端
-    this.svg = this.$refs.svg; //获取到画布Dom
-    let { top, left } = this.svg.getBoundingClientRect(); //获取画布离屏幕顶部和左边的距离
+    // this.svg = this.$refs.svg; //获取到画布Dom
+    // let { top, left } = this.svg.getBoundingClientRect(); //获取画布离屏幕顶部和左边的距离
     this.isMobile = this.util.showMobileTheme();
     //pc端触发鼠标点击事件
-    this.svg.onmousedown = e => {
-      let x = e.offsetX;
-      let y = e.offsetY;
-      let x1 = x;
-      let y1 = y;
-      if (!"peneraser".includes(this.drawObj.type)) {
-        this.$refs.cv.drawCanvas();
-      }
-      this.drawObj.position = {
-        x: x || 0,
-        y: y || 0,
-        x1: x1 || 0,
-        y1: y1 || 0,
-        angle: 0
-      };
-      this.sendMsg("onmousedown");
-      this.$refs.cv.onmousedown(x, y);
-      this.shwoDrag = false;
-      this.svg.onmousemove = e => {
-        x1 = e.offsetX;
-        y1 = e.offsetY;
-        this.sendMsg("onmousemove");
-        this.onmousemove(x, y, x1, y1, true);
-      };
-      document.onmouseup = e => {
-        this.onmouseup(true);
-        this.sendMsg("onmouseup");
-        if (!"penerasercancel".includes(this.drawObj.type)) {
-          if (Math.abs(x1 - x) || Math.abs(y1 - y)) {
-            this.shwoDrag = true;
-          }
-        }
-      };
-    };
+    // this.svg.onmousedown = e => {
+    //   let x = e.offsetX;
+    //   let y = e.offsetY;
+    //   let x1 = x;
+    //   let y1 = y;
+    //   if (!"peneraser".includes(this.drawObj.type)) {
+    //     this.$refs.cv.drawCanvas();
+    //   }
+    //   this.drawObj.position = {
+    //     x: x || 0,
+    //     y: y || 0,
+    //     x1: x1 || 0,
+    //     y1: y1 || 0,
+    //     angle: 0
+    //   };
+    //   this.sendMsg("onmousedown");
+    //   this.$refs.cv.onmousedown(x, y);
+    //   this.shwoDrag = false;
+    //   this.svg.onmousemove = e => {
+    //     x1 = e.offsetX;
+    //     y1 = e.offsetY;
+    //     this.sendMsg("onmousemove");
+    //     this.onmousemove(x, y, x1, y1, true);
+    //   };
+    //   document.onmouseup = e => {
+    //     this.onmouseup(true);
+    //     this.sendMsg("onmouseup");
+    //     if (!"penerasercancel".includes(this.drawObj.type)) {
+    //       if (Math.abs(x1 - x) || Math.abs(y1 - y)) {
+    //         this.shwoDrag = true;
+    //       }
+    //     }
+    //   };
+    // };
+
     this.socket.on("draw", diff => {
       //接收socket消息
       let action = diff.action;
@@ -392,14 +411,9 @@ export default {
 };
 </script>
 <style lang="less" scoped>
-#canvas {
-  max-width: 100%;
-}
 .svg {
   position: absolute;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
+  z-index: 2;
   top: 0;
 }
 
@@ -410,14 +424,14 @@ export default {
   left: 0;
   cursor: pointer;
 }
-.canvas-body {
-  position: relative;
+.canvas-content {
+  display: flex;
 }
 
 #whiteboard {
   border: 1px solid #000;
-  width: 640px;
-  height: 370px;
+  width: 100%;
+  height: 100%;
   max-width: 100%;
   overflow: hidden;
   position: relative;
@@ -425,13 +439,33 @@ export default {
 
 #ppt {
   width: 100%;
-  height: calc(100% + 48px);
+  height: 100vh;
 }
 
 #canvas {
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+.draw-util {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: 650px;
+  background: #cccccc;
+  border-radius: 5px;
+  padding: 10px 20px;
+  z-index: 4;
+}
+.right-box {
+  width: 300px;
+  background: #cccccc;
+  height: 100vh;
 }
 </style>
 
