@@ -11,14 +11,8 @@
         frameborder="0"
         ></iframe>-->
         <iframe id="ppt" frameborder="0" src="/ppt/ppt.html" width="962px" height="565px"></iframe>
-        <canvasDraw
-          id="canvas"
-          :drawObj="drawObj"
-          ref="cv"
-          :windowSize="windowSize"
-          :scale="scale"
-        />
-        <!-- <svg
+        <canvasDraw id="canvas" :drawObj="drawObj" ref="cv" :windowSize="windowSize" />
+        <svg
           class="svg"
           ref="svg"
           xmlns="http://www.w3.org/2000/svg"
@@ -73,9 +67,9 @@
             :stroke-dasharray="drawObj.dashLine?`${drawObj.lineWidth*2}, ${drawObj.lineWidth}`:'0'"
             :transform="`matrix(${setMatrix()})`"
           />
-        </svg>-->
+        </svg>
         <img
-          v-show="shwoDrag"
+          v-if="shwoDrag"
           draggable="true"
           @dragstart="dragstart($event,'move')"
           @drag="draging($event,'move')"
@@ -91,7 +85,7 @@
           src="~assets/img/drag.png"
         />
         <img
-          v-show="shwoDrag"
+          v-if="shwoDrag"
           draggable="true"
           @dragstart="dragstart($event,'rotate')"
           @drag="draging($event,'rotate')"
@@ -110,7 +104,7 @@
 
       <div class="right-box"></div>
     </div>
-    <drawUtil class="draw-util" :drawObj="drawObj" @selectUtil="selectUtil" />
+    <drawUtil v-show="shwoDrawUtil" :drawObj="drawObj" @selectUtil="selectUtil" />
   </section>
 </template>
 <script>
@@ -129,7 +123,6 @@ export default {
     return {
       svg: {},
       ctrlBox: {},
-      shwoDrag: false,
       isMobile: false,
       time: 0,
       socket: {},
@@ -138,7 +131,8 @@ export default {
       ctxArrIndex: 0, //回放时记录ctxArr位置的指针
       pageArr: {}, //页面画布数组对象
       windowSize: [640, 480],
-      scale: 1,
+      shwoDrag: false,
+      shwoDrawUtil: true,
       drawObj: {
         action: "",
         time: 0,
@@ -170,52 +164,54 @@ export default {
         this.$refs.whiteboard.offsetHeight
       ];
     }, 100);
-    window.addEventListener("resize", () => {
-      this.windowSize = [
-        this.$refs.whiteboard.offsetWidth,
-        this.$refs.whiteboard.offsetHeight
-      ];
-    });
+    // window.addEventListener("resize", () => {
+    //   this.windowSize = [
+    //     this.$refs.whiteboard.offsetWidth,
+    //     this.$refs.whiteboard.offsetHeight
+    //   ];
+    // });
     this.socket = io("http://127.0.0.1:8080", { reconnection: false }); //创建socket连接
     let teacher = this.$route.query.teacher; //是否是老是端
-    // this.svg = this.$refs.svg; //获取到画布Dom
-    // let { top, left } = this.svg.getBoundingClientRect(); //获取画布离屏幕顶部和左边的距离
+    this.svg = this.$refs.svg; //获取到画布Dom
+    let { top, left } = this.svg.getBoundingClientRect(); //获取画布离屏幕顶部和左边的距离
     this.isMobile = this.util.showMobileTheme();
     //pc端触发鼠标点击事件
-    // this.svg.onmousedown = e => {
-    //   let x = e.offsetX;
-    //   let y = e.offsetY;
-    //   let x1 = x;
-    //   let y1 = y;
-    //   if (!"peneraser".includes(this.drawObj.type)) {
-    //     this.$refs.cv.drawCanvas();
-    //   }
-    //   this.drawObj.position = {
-    //     x: x || 0,
-    //     y: y || 0,
-    //     x1: x1 || 0,
-    //     y1: y1 || 0,
-    //     angle: 0
-    //   };
-    //   this.sendMsg("onmousedown");
-    //   this.$refs.cv.onmousedown(x, y);
-    //   this.shwoDrag = false;
-    //   this.svg.onmousemove = e => {
-    //     x1 = e.offsetX;
-    //     y1 = e.offsetY;
-    //     this.sendMsg("onmousemove");
-    //     this.onmousemove(x, y, x1, y1, true);
-    //   };
-    //   document.onmouseup = e => {
-    //     this.onmouseup(true);
-    //     this.sendMsg("onmouseup");
-    //     if (!"penerasercancel".includes(this.drawObj.type)) {
-    //       if (Math.abs(x1 - x) || Math.abs(y1 - y)) {
-    //         this.shwoDrag = true;
-    //       }
-    //     }
-    //   };
-    // };
+    this.svg.onmousedown = e => {
+      let x = e.offsetX;
+      let y = e.offsetY;
+      let x1 = x;
+      let y1 = y;
+      if (!"peneraser".includes(this.drawObj.type)) {
+        this.$refs.cv.drawCanvas();
+      }
+      this.shwoDrawUtil = false;
+      this.drawObj.position = {
+        x: x || 0,
+        y: y || 0,
+        x1: x1 || 0,
+        y1: y1 || 0,
+        angle: 0
+      };
+      this.sendMsg("onmousedown");
+      this.$refs.cv.onmousedown(x, y);
+      this.shwoDrag = false;
+      this.svg.onmousemove = e => {
+        x1 = e.offsetX;
+        y1 = e.offsetY;
+        this.sendMsg("onmousemove");
+        this.onmousemove(x, y, x1, y1, true);
+      };
+      document.onmouseup = e => {
+        this.shwoDrawUtil = true;
+        this.onmouseup(true);
+        this.sendMsg("onmouseup");
+        if (!"penerasercancel".includes(this.drawObj.type)) {
+          if (Math.abs(x1 - x) || Math.abs(y1 - y)) {
+            this.shwoDrag = true;
+          }
+        }
+      };
+    };
 
     this.socket.on("draw", diff => {
       //接收socket消息
@@ -231,6 +227,26 @@ export default {
         this.$refs.cv.onmousedown(x, y);
       }
     });
+    window.addEventListener(
+      //获取iframe发来的消息
+      "message",
+      event => {
+        console.log(event);
+        if (event.data) {
+          if (event.data.type == "goPage") {
+            this.$refs.cv.changePage(parseInt(event.data.value) - 1);
+            this.drawObj.position = {
+              x: 0,
+              y: 0,
+              x1: 0,
+              y1: 0,
+              angle: 0
+            };
+          }
+        }
+      },
+      false
+    );
   },
   methods: {
     changeUtil() {
@@ -242,7 +258,6 @@ export default {
     //发送socket消息
     sendMsg(action) {
       this.drawObj.action = action;
-      console.log(this.drawObj);
       this.socket.emit("draw", this.drawObj);
     },
     selectUtil(type) {
@@ -264,6 +279,15 @@ export default {
             this.canvas.height
           );
         }
+      } else if (type == "clear") {
+        this.$refs.cv.clearCanvas();
+        this.drawObj.position = {
+          x: 0,
+          y: 0,
+          x1: 0,
+          y1: 0,
+          angle: 0
+        };
       } else if (type != "cancel") {
         this.$refs.cv.drawCanvas();
         this.drawObj.position = {};
@@ -311,11 +335,11 @@ export default {
       }
       if (mx < px && my == py) {
         //鼠标在x轴正方向上
-        angle = 270;
-      }
-      if (mx < px && my == py) {
-        //鼠标在x轴正方向上
         angle = 180;
+      }
+      if (mx > px && my == py) {
+        //鼠标在x轴正方向上
+        angle = 0;
       }
       if (mx < px && my > py) {
         //鼠标在第三象限
@@ -354,7 +378,9 @@ export default {
     },
     draging(e, type) {
       e.stopPropagation();
-      let { top, left } = this.svg.getBoundingClientRect();
+      console.log(this.$refs.cv.$el);
+
+      let { top, left } = this.$refs.cv.$el.getBoundingClientRect();
       let mx = this.isMobile ? e.targetTouches[0].pageX - left : e.pageX - left;
       let my = this.isMobile ? e.targetTouches[0].pageY - top : e.pageY - top;
       let { x, y, x1, y1 } = this.drawObj.position;
@@ -373,7 +399,7 @@ export default {
     },
     dragend(e, type) {
       e.stopPropagation();
-      let { top, left } = this.svg.getBoundingClientRect();
+      let { top, left } = this.$refs.cv.$el.getBoundingClientRect();
       let mx = this.isMobile ? e.targetTouches[0].pageX - left : e.pageX - left;
       let my = this.isMobile ? e.targetTouches[0].pageY - top : e.pageY - top;
       let { x, y, x1, y1 } = this.drawObj.position;
@@ -404,6 +430,7 @@ export default {
       }
     },
     onmouseup() {
+      this.$refs.cv.onmouseup();
       this.svg.onmousemove = null;
       document.onmouseup = null;
     }
@@ -449,18 +476,6 @@ export default {
   width: 100%;
   height: 100%;
   z-index: 1;
-}
-.draw-util {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  margin: auto;
-  width: 650px;
-  background: #cccccc;
-  border-radius: 5px;
-  padding: 10px 20px;
-  z-index: 4;
 }
 .right-box {
   width: 300px;
