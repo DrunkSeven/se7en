@@ -2,7 +2,7 @@
   <section>
     <div class="canvas-content">
       <!-- <div>{{time}}</div> -->
-      <div ref="whiteboard" id="whiteboard">
+      <div ref="whiteboard" id="whiteboard" style="min-width:960px;min-height:720px">
         <!-- <iframe
         id="ppt"
         src="http://vip.ow365.cn/?i=34&n=5&furl=http%3A%2F%2Fofficeweb365.com%2Fviewfile%2F%E6%B7%B1%E5%85%A5%E6%B5%85%E5%87%BAHTML5%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91.pptx&p=1"
@@ -10,14 +10,14 @@
         height="691px"
         frameborder="0"
         ></iframe>-->
-        <iframe id="ppt" frameborder="0" src="/ppt/ppt.html" width="962px" height="565px"></iframe>
+        <iframe id="ppt" frameborder="0" src="/ppt/ppt.html" width="100%" height="100%"></iframe>
         <canvasDraw id="canvas" :drawObj="drawObj" ref="cv" :windowSize="windowSize" />
         <svg
           class="svg"
           ref="svg"
           xmlns="http://www.w3.org/2000/svg"
-          style="top:0"
-          :width="windowSize[0]"
+          :style="{'top':windowSize[2]}"
+          :width="960"
           :height="windowSize[1]"
         >
           <line
@@ -81,7 +81,7 @@
           class="drag"
           width="20px"
           height="20px"
-          :style="{'left':drawObj.position.x-10+'px','top':drawObj.position.y-10+'px'}"
+          :style="{'left':drawObj.position.x-10+'px','top':drawObj.position.y+windowSize[2]-10+'px'}"
           src="~assets/img/drag.png"
         />
         <img
@@ -97,12 +97,12 @@
           class="drag"
           width="20px"
           height="20px"
-          :style="{'left':drawObj.position.x1-10+'px','top':drawObj.position.y1-10+'px'}"
+          :style="{'left':drawObj.position.x1-10+'px','top':drawObj.position.y1+windowSize[2]-10+'px'}"
           src="~assets/img/rotate.png"
         />
       </div>
 
-      <div class="right-box"></div>
+      <div class="right-box">{{drawObj.position.y1+windowSize[2]+'px'}}</div>
     </div>
     <drawUtil v-show="shwoDrawUtil" :drawObj="drawObj" @selectUtil="selectUtil" />
   </section>
@@ -130,7 +130,7 @@ export default {
       isPlayback: false,
       ctxArrIndex: 0, //回放时记录ctxArr位置的指针
       pageArr: {}, //页面画布数组对象
-      windowSize: [640, 480],
+      windowSize: [640, 480, 0],
       shwoDrag: false,
       shwoDrawUtil: true,
       drawObj: {
@@ -158,18 +158,15 @@ export default {
   },
 
   mounted() {
-    setTimeout(() => {
-      this.windowSize = [
-        this.$refs.whiteboard.offsetWidth,
-        this.$refs.whiteboard.offsetHeight
-      ];
-    }, 100);
     // window.addEventListener("resize", () => {
     //   this.windowSize = [
     //     this.$refs.whiteboard.offsetWidth,
     //     this.$refs.whiteboard.offsetHeight
     //   ];
     // });
+    let ppt = document.getElementById("ppt");
+
+    ppt.contentWindow.postMessage("getPptSize", "*");
     this.socket = io("http://127.0.0.1:8080", { reconnection: false }); //创建socket连接
     let teacher = this.$route.query.teacher; //是否是老是端
     this.svg = this.$refs.svg; //获取到画布Dom
@@ -242,6 +239,8 @@ export default {
               y1: 0,
               angle: 0
             };
+          } else if (event.data.type == "pptSize") {
+            this.windowSize = event.data.value;
           }
         }
       },
@@ -378,15 +377,15 @@ export default {
     },
     draging(e, type) {
       e.stopPropagation();
-      console.log(this.$refs.cv.$el);
-
-      let { top, left } = this.$refs.cv.$el.getBoundingClientRect();
+      let { top, left } = this.svg.getBoundingClientRect();
       let mx = this.isMobile ? e.targetTouches[0].pageX - left : e.pageX - left;
       let my = this.isMobile ? e.targetTouches[0].pageY - top : e.pageY - top;
       let { x, y, x1, y1 } = this.drawObj.position;
       let offsetX = mx - x;
       let offsetY = my - y;
       if (type == "move") {
+        console.log(mx, my, x1 + offsetX, y1 + offsetY);
+
         this.onmousemove(mx, my, x1 + offsetX, y1 + offsetY);
       } else if (type == "rotate") {
         if (this.drawObj.type == "line") {
@@ -399,7 +398,7 @@ export default {
     },
     dragend(e, type) {
       e.stopPropagation();
-      let { top, left } = this.$refs.cv.$el.getBoundingClientRect();
+      let { top, left } = this.svg.getBoundingClientRect();
       let mx = this.isMobile ? e.targetTouches[0].pageX - left : e.pageX - left;
       let my = this.isMobile ? e.targetTouches[0].pageY - top : e.pageY - top;
       let { x, y, x1, y1 } = this.drawObj.position;
@@ -457,28 +456,12 @@ export default {
 
 #whiteboard {
   border: 1px solid #000;
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
   overflow: hidden;
   position: relative;
 }
 
-#ppt {
-  width: 100%;
-  height: 100vh;
-}
-
-#canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
 .right-box {
-  width: 300px;
+  flex: 1;
   background: #cccccc;
   height: 100vh;
 }
