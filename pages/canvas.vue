@@ -104,7 +104,7 @@
 
       <div class="right-box">{{drawObj.position.y1+windowSize[2]+'px'}}</div>
     </div>
-    <drawUtil v-show="shwoDrawUtil" :drawObj="drawObj" @selectUtil="selectUtil" />
+    <drawUtil v-show="shwoDrawUtil" :drawObj="drawObj" @selectUtil="selectUtil" @setPage="setPage" />
   </section>
 </template>
 <script>
@@ -164,9 +164,11 @@ export default {
     //     this.$refs.whiteboard.offsetHeight
     //   ];
     // });
-    let ppt = document.getElementById("ppt");
+    setTimeout(() => {
+      let ppt = document.getElementById("ppt");
+      ppt.contentWindow.postMessage("getPptSize", "*");
+    }, 200);
 
-    ppt.contentWindow.postMessage("getPptSize", "*");
     this.socket = io("http://127.0.0.1:8080", { reconnection: false }); //创建socket连接
     let teacher = this.$route.query.teacher; //是否是老是端
     this.svg = this.$refs.svg; //获取到画布Dom
@@ -224,11 +226,14 @@ export default {
         this.$refs.cv.onmousedown(x, y);
       }
     });
+    this.socket.on("ppt", diff => {
+      //接收socket消息
+      this.setPage(diff.pageIndex, false);
+    });
     window.addEventListener(
       //获取iframe发来的消息
       "message",
       event => {
-        console.log(event);
         if (event.data) {
           if (event.data.type == "goPage") {
             this.$refs.cv.changePage(parseInt(event.data.value) - 1);
@@ -255,29 +260,24 @@ export default {
       }
     },
     //发送socket消息
-    sendMsg(action) {
+    sendMsg(action, type = "draw") {
       this.drawObj.action = action;
-      this.socket.emit("draw", this.drawObj);
+      this.socket.emit(type, this.drawObj);
     },
     selectUtil(type) {
       //设置绘图工具
       this.shwoDrag = false;
-      let arr = this.pageArr[this.drawObj.pageIndex];
-      if (type == "cancel" && arr) {
+      if (type == "cancel") {
         //如果用户点击了撤销,把画布信息数组中的最后一个数据删除,获取倒数第二个数据
-        arr.pop();
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        if (arr.length > 0) {
-          this.ctx.putImageData(
-            arr[arr.length - 1],
-            0,
-            0,
-            0,
-            0,
-            this.canvas.width,
-            this.canvas.height
-          );
-        }
+
+        this.$refs.cv.cancel();
+        this.drawObj.position = {
+          x: 0,
+          y: 0,
+          x1: 0,
+          y1: 0,
+          angle: 0
+        };
       } else if (type == "clear") {
         this.$refs.cv.clearCanvas();
         this.drawObj.position = {
@@ -293,7 +293,15 @@ export default {
         this.drawObj.type = type;
       }
     },
-
+    setPage(type, sendMsg = true) {
+      let ppt = document.getElementById("ppt");
+      if (Number.isInteger(type)) {
+        ppt.contentWindow.postMessage("goPage," + type, "*");
+      } else {
+        ppt.contentWindow.postMessage(type, "*");
+        if (sendMsg) this.sendMsg(type, "ppt");
+      }
+    },
     setMatrix() {
       let {
         position: { x = 0, y = 0, x1 = 0, y1 = 0, angle = 0 },
@@ -441,6 +449,7 @@ export default {
   position: absolute;
   z-index: 2;
   top: 0;
+  left: 0;
 }
 
 .drag {

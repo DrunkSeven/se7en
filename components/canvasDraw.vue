@@ -17,7 +17,6 @@ export default {
       ctx: {}, //绘图对象
       draw: {}, //绘图工具类
       canvas: {}, //画布
-      putImageData: [],
       pageArr: [],
       drawing: false
     };
@@ -50,6 +49,29 @@ export default {
     };
   },
   methods: {
+    cancel() {
+      let { x1, y1 } = this.drawObj.position;
+      if (x1 || y1) {
+        this.drawCanvas();
+        this.pageArr[this.drawObj.pageIndex].push(
+          this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height)
+        );
+      }
+      let arr = this.pageArr[this.drawObj.pageIndex];
+      arr.pop();
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      if (arr.length > 0) {
+        this.ctx.putImageData(
+          arr[arr.length - 1],
+          0,
+          0,
+          0,
+          0,
+          this.canvas.width,
+          this.canvas.height
+        );
+      }
+    },
     clearCanvas() {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.pageArr[this.drawObj.pageIndex].push(

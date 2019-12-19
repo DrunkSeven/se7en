@@ -181,6 +181,7 @@
           <el-button size="mini" @click="setPage('prePage')">上一张</el-button>
           <!-- <button id="preAnim">上一个动画</button> -->
           <el-button size="mini" @click="selectUtil('clear')">清空画布</el-button>
+          <el-button size="mini" @click="selectUtil('cancel')">撤销</el-button>
           <!-- <button id="nextAnim">下一个动画</button> -->
           <el-button size="mini" @click="setPage('nextPage')">下一张</el-button>
           <!-- <el-button @click="playback()">重绘</el-button> -->
@@ -214,12 +215,7 @@ export default {
       this.$emit("selectUtil", type);
     },
     setPage(type) {
-      let ppt = document.getElementById("ppt");
-      if (Number.isInteger(type)) {
-        ppt.contentWindow.postMessage("goPage," + type, "*");
-      } else {
-        ppt.contentWindow.postMessage(type, "*");
-      }
+      this.$emit("setPage", type);
     }
   }
 };
